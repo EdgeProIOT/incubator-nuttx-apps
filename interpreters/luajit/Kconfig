@@ -1,0 +1,20 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config INTERPRETERS_LUAJIT
+	tristate "LuaJIT"
+	default n
+
+if INTERPRETERS_LUAJIT
+
+config INTERPRETERS_LUAJIT_PRIORITY
+	int "LuaJIT REPL priority"
+	default 100
+
+config INTERPRETERS_LUAJIT_STACKSIZE
+	int "LuaJIT REPL stack size"
+	default 16384
+
+endif
