@@ -25,6 +25,7 @@ CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
     $(APPDIR)/interpreters/luajit/LuaJIT/src}
 CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
     $(APPDIR)/interpreters/luajit/LuaJIT/src}
+
 CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
     $(APPDIR)/interpreters/luajit/LuaJIT/src/host}
 CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
