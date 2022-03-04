@@ -75,7 +75,104 @@ $(LUAJIT_UNPACK): $(LUAJIT_TARBALL)
 $(LUAJIT_UNPACK)/.patch: $(LUAJIT_UNPACK)
 	$(Q) touch $(LUAJIT_UNPACK)/.patch
 
-context:: $(LUAJIT_UNPACK)/.patch
+CCOPTIONS= $(CCDEBUG) $(ASOPTIONS)
+LDOPTIONS= $(CCDEBUG) $(LDFLAGS)
+
+HOST_LUA=
+
+HOST_XCFLAGS= -I./LuaJIT/src -I./LuaJIT/src/host
+HOST_XLDFLAGS=
+HOST_XLIBS=
+HOST_ACFLAGS= $(CCOPTIONS) $(HOST_XCFLAGS) $(TARGET_ARCH) $(HOST_CFLAGS)
+HOST_ALDFLAGS= $(LDOPTIONS) $(HOST_XLDFLAGS) $(HOST_LDFLAGS)
+HOST_ALIBS= $(HOST_XLIBS) $(LIBS) $(HOST_LIBS)
+
+MINILUA_O= host/minilua.o
+MINILUA_LIBS= -lm
+MINILUA_T= host/minilua
+MINILUA_X= $(MINILUA_T)
+HOST_LUA= $(MINILUA_X)
+DASM_DEP= $(MINILUA_T)
+
+DASM_DIR= ../dynasm
+DASM= $(HOST_LUA) $(DASM_DIR)/dynasm.lua
+DASM_XFLAGS=
+DASM_AFLAGS=
+DASM_ARCH= arm
+
+DASM_AFLAGS+= -D ENDIAN_LE
+DASM_AFLAGS+= -D JIT
+DASM_AFLAGS+= -D FFI
+DASM_AFLAGS+= -D DUALNUM
+DASM_AFLAGS+= -D FPU
+DASM_AFLAGS+= -D HFABI
+DASM_AFLAGS+= -D NO_UNWIND
+DASM_AFLAGS+= -D VER=70
+
+DASM_FLAGS= $(DASM_XFLAGS) $(DASM_AFLAGS)
+DASM_DASC= vm_$(DASM_ARCH).dasc
+
+BUILDVM_O= host/buildvm.o host/buildvm_asm.o host/buildvm_peobj.o \
+						host/buildvm_lib.o host/buildvm_fold.o
+BUILDVM_T= host/buildvm
+BUILDVM_X= $(BUILDVM_T)
+
+HOST_O= $(MINILUA_O) $(BUILDVM_O)
+HOST_T= $(MINILUA_T) $(BUILDVM_T)
+
+LJVM_S= lj_vm.S
+LJVM_O= lj_vm.o
+LJVM_BOUT= $(LJVM_S)
+LJVM_MODE= elfasm
+
+LJLIB_O= lib_base.o lib_math.o lib_bit.o lib_string.o lib_table.o \
+	 lib_io.o lib_os.o lib_package.o lib_debug.o lib_jit.o lib_ffi.o \
+	 lib_buffer.o
+LJLIB_C= $(LJLIB_O:.o=.c)
+
+LIB_VMDEF= jit/vmdef.lua
+LIB_VMDEFP= $(LIB_VMDEF)
+
+ALL_HDRGEN= lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h \
+						host/buildvm_arch.h
+ALL_GEN= $(LJVM_S) $(ALL_HDRGEN)
+
+$(MINILUA_T): $(MINILUA_O)
+	$(Q)$(HOSTCC) $(HOST_ALDFLAGS) -o $@ $(MINILUA_O) $(MINILUA_LIBS) $(HOST_ALIBS)
+
+host/buildvm_arch.h: $(DASM_DASC) $(DASM_DEP) $(DASM_DIR)/*.lua lj_arch.h lua.h luaconf.h
+	$(Q)$(DASM) $(DASM_FLAGS) -o $@ $(DASM_DASC)
+
+host/buildvm.o: $(DASM_DIR)/dasm_armv7m.h
+
+$(BUILDVM_T): $(BUILDVM_O)
+	$(Q)$(HOSTCC) -m32 $(HOST_ALDFLAGS) -o $@ $(BUILDVM_O) $(HOST_ALIBS)
+
+$(LJVM_BOUT): $(BUILDVM_T)
+	$(Q)$(BUILDVM_X) -m $(LJVM_MODE) -o $@
+
+lj_bcdef.h: $(BUILDVM_T) $(LJLIB_C)
+	$(Q)$(BUILDVM_X) -m bcdef -o $@ $(LJLIB_C)
+
+lj_ffdef.h: $(BUILDVM_T) $(LJLIB_C)
+	$(Q)$(BUILDVM_X) -m ffdef -o $@ $(LJLIB_C)
+
+lj_libdef.h: $(BUILDVM_T) $(LJLIB_C)
+	$(Q)$(BUILDVM_X) -m libdef -o $@ $(LJLIB_C)
+
+lj_recdef.h: $(BUILDVM_T) $(LJLIB_C)
+	$(Q)$(BUILDVM_X) -m recdef -o $@ $(LJLIB_C)
+
+$(LIB_VMDEF): $(BUILDVM_T) $(LJLIB_C)
+	$(Q)$(BUILDVM_X) -m vmdef -o $(LIB_VMDEFP) $(LJLIB_C)
+
+lj_folddef.h: $(BUILDVM_T) lj_opt_fold.c
+	$(Q)$(BUILDVM_X) -m folddef -o $@ lj_opt_fold.c
+
+$(HOST_O): %.o: %.c
+	$(Q)$(HOSTCC) -m32 $(HOST_ACFLAGS) -c -o $@ $<
+
+context:: $(LUAJIT_UNPACK)/.patch $(ALL_GEN)
 
 distclean::
 	$(call DELDIR, $(LUAJIT_UNPACK))
