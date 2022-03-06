@@ -75,23 +75,22 @@ $(LUAJIT_UNPACK): $(LUAJIT_TARBALL)
 $(LUAJIT_UNPACK)/.patch: $(LUAJIT_UNPACK)
 	$(Q) touch $(LUAJIT_UNPACK)/.patch
 
+HOSTCFLAGS += -I.
+HOSTLDFLAGS += -lm
 
-HOST_CFLAGS= -I.
-HOST_LDFLAGS=
+MINILUA_SRCS = $(LUAJIT_UNPACK)/src/host/minilua.c
+MINILUA_BIN = $(LUAJIT_UNPACK)/src/host/minilua
 
-MINILUA_O= $(LUAJIT_UNPACK)/src/host/minilua.o
-MINILUA_T= $(LUAJIT_UNPACK)/src/host/minilua
-MINILUA_X= $(MINILUA_T)
+MINILUA_OBJS = $(MINILUA_SRCS:.c=.o)
+$(MINILUA_OBJS): %.o: %.c
+	@echo "CC:  $<"
+	$(Q) $(HOSTCC) -m32 -c $(HOSTCFLAGS) $< -o $@
+
+$(MINILUA_BIN): $(MINILUA_OBJS)
+	$(Q) $(HOSTCC) -m32 $(MINILUA_OBJS) -o $@ $(HOSTLDFLAGS)
 
 
-$(MINILUA_T): $(MINILUA_O)
-	$(Q)$(HOSTCC) $(HOST_LDFLAGS) -o $@ $(MINILUA_O) -lm
-
-
-$(MINILUA_O): $(LUAJIT_UNPACK)/src/host/minilua.c
-	$(Q)$(HOSTCC) -m32 $(HOST_ACFLAGS) -c -o $@ $<
-
-context:: $(LUAJIT_UNPACK)/.patch
+context:: $(LUAJIT_UNPACK)/.patch $(MINILUA_BIN)
 
 distclean::
 	$(call DELDIR, $(LUAJIT_UNPACK))
