@@ -5,7 +5,7 @@
 
 config INTERPRETERS_LUAJIT
 	tristate "LuaJIT"
-	default n
+	default y
 
 if INTERPRETERS_LUAJIT
 
