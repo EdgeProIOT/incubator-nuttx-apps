@@ -5404,46 +5404,6 @@ index e8790c1d..f8af5803 100644
  #define LUA_LCDIR	LUA_LROOT "/" LUA_LMULTILIB LUA_LUADIR
  #define LUA_LLPATH	";" LUA_LLDIR "?.lua;" LUA_LLDIR "?/init.lua"
  #define LUA_LCPATH1	";" LUA_LCDIR "?.so"
-diff --git a/src/luajit.c b/src/luajit.c
-index 6dd64026..cf43a9c8 100644
---- a/src/luajit.c
-+++ b/src/luajit.c
-@@ -9,6 +9,8 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <string.h>
-+#include <dlfcn.h>
-+#include <nuttx/symtab.h>
- 
- #define luajit_c
- 
-@@ -566,12 +568,23 @@ static int pmain(lua_State *L)
-   return 0;
- }
- 
-+extern const struct symtab_s g_so_exports[];
-+extern const int g_so_nexports;
-+
- int main(int argc, char **argv)
- {
-   int status;
--  lua_State *L;
--  if (!argv[0]) argv = empty_argv; else if (argv[0][0]) progname = argv[0];
--  L = lua_open();
-+
-+  /* Set the shared library symbol table */
-+
-+  status = dlsymtab((FAR struct symtab_s *)g_so_exports, g_so_nexports);
-+  if (status < 0)
-+    {
-+      fprintf(stderr, "ERROR: dlsymtab failed: %d\n", status);
-+      exit(EXIT_FAILURE);
-+    }
-+
-+  lua_State *L = lua_open();
-   if (L == NULL) {
-     l_message("cannot create state: not enough memory");
-     return EXIT_FAILURE;
 diff --git a/src/vm_armv7m.dasc b/src/vm_armv7m.dasc
 new file mode 100755
 index 00000000..545ccbf4
