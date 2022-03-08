@@ -114,6 +114,8 @@ LJLIB_O= $(LUAJIT_UNPACK)/src/lib_base.o $(LUAJIT_UNPACK)/src/lib_math.o $(LUAJI
 
 LJLIB_C= $(LJLIB_O:.o=.c)
 
+.NOTPARALLEL:
+
 $(MINILUA_BIN): $(MINILUA_O)
 	@echo "HOSTLINK  $@"
 	$(Q) $(HOSTCC) -m32 -o $@ $(MINILUA_O) $(HOSTLDFLAGS)
