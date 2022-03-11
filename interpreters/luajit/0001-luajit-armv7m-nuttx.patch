@@ -5370,40 +5370,18 @@ index 00000000..5dc6d488
 +
 +#endif
 diff --git a/src/luaconf.h b/src/luaconf.h
-index e8790c1d..f8af5803 100644
+index e8790c1d..8308a350 100644
 --- a/src/luaconf.h
 +++ b/src/luaconf.h
-@@ -35,14 +35,14 @@
- #ifndef LUA_LMULTILIB
- #define LUA_LMULTILIB	"lib"
+@@ -37,7 +37,7 @@
  #endif
--#define LUA_LROOT	"/usr/local"
--#define LUA_LUADIR	"/lua/5.1/"
+ #define LUA_LROOT	"/usr/local"
+ #define LUA_LUADIR	"/lua/5.1/"
 -#define LUA_LJDIR	"/luajit-2.1.0-beta3/"
-+#define LUA_LROOT	"/mnt/lfs"
-+#define LUA_LUADIR	"/lua"
-+#define LUA_LJDIR	"/"
++#define LUA_LJDIR	"/luajit-2.1.0-beta5/"
  
  #ifdef LUA_ROOT
  #define LUA_JROOT	LUA_ROOT
--#define LUA_RLDIR	LUA_ROOT "/share" LUA_LUADIR
--#define LUA_RCDIR	LUA_ROOT "/" LUA_MULTILIB LUA_LUADIR
-+#define LUA_RLDIR	LUA_ROOT "" LUA_LUADIR
-+#define LUA_RCDIR	LUA_ROOT "" LUA_MULTILIB LUA_LUADIR
- #define LUA_RLPATH	";" LUA_RLDIR "?.lua;" LUA_RLDIR "?/init.lua"
- #define LUA_RCPATH	";" LUA_RCDIR "?.so"
- #else
-@@ -51,8 +51,8 @@
- #define LUA_RCPATH
- #endif
- 
--#define LUA_JPATH	";" LUA_JROOT "/share" LUA_LJDIR "?.lua"
--#define LUA_LLDIR	LUA_LROOT "/share" LUA_LUADIR
-+#define LUA_JPATH	";" LUA_JROOT "/" LUA_LJDIR "?.lua"
-+#define LUA_LLDIR	LUA_LROOT "/" LUA_LUADIR
- #define LUA_LCDIR	LUA_LROOT "/" LUA_LMULTILIB LUA_LUADIR
- #define LUA_LLPATH	";" LUA_LLDIR "?.lua;" LUA_LLDIR "?/init.lua"
- #define LUA_LCPATH1	";" LUA_LCDIR "?.so"
 diff --git a/src/vm_armv7m.dasc b/src/vm_armv7m.dasc
 new file mode 100755
 index 00000000..13266007
