@@ -35,9 +35,9 @@
  */
 
 #include <sys/types.h>
-#include <sys/tree.h>
+#include "sys/tree.h"
 #include <sys/stat.h>
-#include <sys/queue.h>
+#include "sys/queue.h"
 #include <sys/uio.h>
 
 #include <assert.h>
@@ -82,7 +82,7 @@ typedef uint16_t	 indx_t;
 /* There are four page types: meta, index, leaf and overflow.
  * They all share the same page header.
  */
-struct page {				/* represents an on-disk page */
+struct __attribute__((packed)) page {	/* represents an on-disk page */
 	pgno_t		 pgno;		/* page number */
 #define	P_BRANCH	 0x01		/* branch page */
 #define	P_LEAF		 0x02		/* leaf page */
@@ -101,7 +101,7 @@ struct page {				/* represents an on-disk page */
 		pgno_t		 pb_next_pgno;	/* overflow page linked list */
 	} b;
 	indx_t		 ptrs[1];		/* dynamic size */
-} __packed;
+};
 
 #define PAGEHDRSZ	 offsetof(struct page, ptrs)
 
@@ -114,14 +114,14 @@ struct page {				/* represents an on-disk page */
 #define IS_BRANCH(mp)	 F_ISSET((mp)->page->flags, P_BRANCH)
 #define IS_OVERFLOW(mp)	 F_ISSET((mp)->page->flags, P_OVERFLOW)
 
-struct bt_head {				/* header page content */
+struct __attribute__((packed)) bt_head {	/* header page content */
 	uint32_t	 magic;
 	uint32_t	 version;
 	uint32_t	 flags;
 	uint32_t	 psize;			/* page size */
-} __packed;
+};
 
-struct bt_meta {				/* meta (footer) page content */
+struct __attribute__((packed)) bt_meta {	/* meta (footer) page content */
 #define BT_TOMBSTONE	 0x01			/* file is replaced */
 	uint32_t	 flags;
 	pgno_t		 root;			/* page number of root page */
@@ -134,7 +134,7 @@ struct bt_meta {				/* meta (footer) page content */
 	uint32_t	 depth;
 	uint64_t	 entries;
 	uint32_t	 hash;
-} __packed;
+};
 
 struct btkey {
 	size_t			 len;
@@ -194,7 +194,7 @@ struct cursor {
 #define METAHASHLEN	 offsetof(struct bt_meta, hash)
 #define METADATA(p)	 ((void *)((char *)p + PAGEHDRSZ))
 
-struct node {
+struct __attribute__((packed)) node {
 #define n_pgno		 p.np_pgno
 #define n_dsize		 p.np_dsize
 	union {
@@ -205,7 +205,7 @@ struct node {
 #define F_BIGDATA	 0x01			/* data put on overflow page */
 	uint8_t		 flags;
 	char		 data[1];
-} __packed;
+};
 
 struct btree_txn {
 	pgno_t			 root;		/* current / new root page */
@@ -1007,7 +1007,7 @@ btree_is_meta_page(struct page *p)
 	}
 
 	hash = crc32((unsigned char *)m, METAHASHLEN);
-	if (bcmp(hash, m->hash, SHA_DIGEST_LENGTH) != 0) {
+	if (bcmp(&hash, &m->hash, sizeof(uint32_t)) != 0) {
 		DPRINTF("page %d has an invalid digest", p->pgno);
 		errno = EINVAL;
 		return 0;
