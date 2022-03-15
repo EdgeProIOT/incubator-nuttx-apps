@@ -1,5 +1,5 @@
 ############################################################################
-# apps/db/btree/Makefile
+# apps/db/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,13 +16,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################/
+############################################################################
 
-include $(APPDIR)/Make.defs
+MENUDESC = "DB Implementations"
 
-DEPPATH += --dep-path sys
-VPATH   += sys
-
-CSRCS = btree.c
-
-include $(APPDIR)/Application.mk
+include $(APPDIR)/Directory.mk
