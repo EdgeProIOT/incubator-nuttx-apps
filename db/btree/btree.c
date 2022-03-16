@@ -661,7 +661,8 @@ struct btree_txn *
 btree_txn_begin(struct btree *bt, int rdonly)
 {
 	struct btree_txn	*txn;
-
+	struct flock 		fl;
+    
 	if (!rdonly && bt->txn != NULL) {
 		DPRINTF("write transaction already begun");
 		errno = EBUSY;
@@ -684,13 +685,23 @@ btree_txn_begin(struct btree *bt, int rdonly)
 		SIMPLEQ_INIT(txn->dirty_queue);
 
 		DPRINTF("taking write lock on txn %p", txn);
-		if (flock(bt->fd, LOCK_EX | LOCK_NB) != 0) {
+		
+		memset(&fl, 0, sizeof(fl));
+		fl.l_type = F_WRLCK;	/* F_WRLCK is exclusive lock */
+		fl.l_whence = SEEK_SET;	/* offset base is start of the file */
+		fl.l_start = 0; /* starting offset is zero */
+		fl.l_len= 0; /* len is zero, which is a special value
+						representing end of file (no matter
+						how large the file grows in future) */
+		/* F_SETLKW specifies non-blocking mode */
+		if (fcntl(bt->fd, F_SETLK, &fl) == -1) {
 			DPRINTF("flock: %s", strerror(errno));
 			errno = EBUSY;
 			free(txn->dirty_queue);
 			free(txn);
-			return NULL;
+			return NULL;	
 		}
+
 		bt->txn = txn;
 	}
 
@@ -713,6 +724,7 @@ btree_txn_abort(struct btree_txn *txn)
 {
 	struct mpage	*mp;
 	struct btree	*bt;
+	struct flock 	fl;
 
 	if (txn == NULL)
 		return;
@@ -733,10 +745,19 @@ btree_txn_abort(struct btree_txn *txn)
 
 		DPRINTF("releasing write lock on txn %p", txn);
 		txn->bt->txn = NULL;
-		if (flock(txn->bt->fd, LOCK_UN) != 0) {
+		/* release lock for bytes in range [10; 15) */
+		memset(&fl, 0, sizeof(fl));
+		fl.l_type = F_UNLCK;
+		fl.l_whence = SEEK_SET;	/* offset base is start of the file */
+		fl.l_start = 0; /* starting offset is zero */
+		fl.l_len= 0; /* len is zero, which is a special value
+						representing end of file (no matter
+						how large the file grows in future) */
+		if (fcntl(txn->bt->fd, F_SETLK, &fl) == -1) {
 			DPRINTF("failed to unlock fd %d: %s",
 			    txn->bt->fd, strerror(errno));
 		}
+
 		free(txn->dirty_queue);
 	}
 
