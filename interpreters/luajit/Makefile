@@ -22,7 +22,7 @@ include $(APPDIR)/Make.defs
 
 LUAJIT_PATCHS ?= $(sort $(wildcard 000*.patch))
 
-LUAJIT_VERSION  = 2.1.0-beta7
+LUAJIT_VERSION  = 2.1.0-beta3-1
 LUAJIT_UNPACK   = LuaJIT
 LUAJIT_TARBALL  = v$(LUAJIT_VERSION).tar.gz
 LUAJIT_URL_BASE = https://github.com/jturnsek/LuaJIT/archive
