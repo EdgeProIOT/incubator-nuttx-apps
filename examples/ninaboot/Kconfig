@@ -1,0 +1,40 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_NINABOOT
+	tristate "NINA Boot serial port bridge"
+	default n
+	---help---
+		Enable the NINA Boot serial port bridge
+
+if EXAMPLES_NINABOOT
+
+config EXAMPLES_NINABOOT_STACKSIZE
+	int "NINA Boot stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+config EXAMPLES_NINABOOT_PRIORITY
+	int "NINA Boot task priority"
+	default 50
+
+config EXAMPLES_NINABOOT_BUFSIZE
+	int "Buffer size"
+	default 11520
+	---help---
+		Specifies the default buffer size
+
+config EXAMPLES_NINABOOT_DEVPATH_IN
+	string "Serial device in path"
+	default "/dev/ttyACM0"
+	---help---
+		The default path to the serial in device
+
+config EXAMPLES_NINABOOT_DEVPATH_OUT
+	string "Serial device out path"
+	default "/dev/ttyS1"
+	---help---
+		The default path to the serial out device
+
+endif
