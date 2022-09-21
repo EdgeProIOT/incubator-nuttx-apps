@@ -21,7 +21,7 @@ config EXAMPLES_NINABOOT_PRIORITY
 
 config EXAMPLES_NINABOOT_BUFSIZE
 	int "Buffer size"
-	default 11520
+	default 2048
 	---help---
 		Specifies the default buffer size
 
