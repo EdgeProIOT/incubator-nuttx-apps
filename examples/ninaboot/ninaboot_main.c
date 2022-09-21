@@ -23,40 +23,44 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
+#include <sys/ioctl.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <termios.h>
 #include <nuttx/arch.h>
+#include <nuttx/ioexpander/gpio.h>
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * serialrx_main
+ * ninaboot_main
  ****************************************************************************/
 
 int main(int argc, FAR char *argv[])
 {
-  int fdin, fdout, fdgpio0, fdgpio1;
+  int fdusb, fdnina, fdgpio0, fdgpio1;
   int ret;
-  bool eof = false;
-  FAR char *buf;
-  FAR char *devpathin, *devpathout;
+  char *buf, *buf2;
+  char *devpathin, *devpathout;
+  struct pollfd fds[2];
+  struct termios tty;
 
   if (argc == 1)
     {
-      devpathin = EXAMPLES_NINABOOT_DEVPATH_IN;
-      devpathout = EXAMPLES_NINABOOT_DEVPATH_OUT;
+      devpathin = CONFIG_EXAMPLES_NINABOOT_DEVPATH_IN;
+      devpathout = CONFIG_EXAMPLES_NINABOOT_DEVPATH_OUT;
     }
   else if (argc == 2)
     {
       devpathin = argv[1];
-      devpathout = EXAMPLES_NINABOOT_DEVPATH_OUT;
+      devpathout = CONFIG_EXAMPLES_NINABOOT_DEVPATH_OUT;
     }
   else if (argc == 3)
     {
@@ -69,26 +73,12 @@ int main(int argc, FAR char *argv[])
       goto errout;
     }
 
-  buf = (FAR char *)malloc(CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
-
+  buf = (char *)malloc(CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+  memset(buf, 0, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
   if (buf == NULL)
     {
       fprintf(stderr, "ERROR: malloc failed: %d\n", errno);
       goto errout;
-    }
-
-  fdin = open(devpathin, O_RDWR);
-  if (fdin < 0)
-    {
-      fprintf(stderr, "ERROR: open failed: %d\n", errno);
-      goto errout_with_buf;
-    }
-
-  fdout = open(devpathout, O_RDWR);
-  if (fdout < 0)
-    {
-      fprintf(stderr, "ERROR: open failed: %d\n", errno);
-      goto errout_with_buf;
     }
 
   fdgpio0 = open("/dev/gpio0", O_RDWR);
@@ -105,44 +95,95 @@ int main(int argc, FAR char *argv[])
       goto errout_with_buf;
     }
 
-  printf("Bridging %s with %s\n", devpathin, devpathout;
-  fflush(stdout);
-
-  ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
-  up_udelay(1000);
   ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
+  ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
   up_udelay(1000);
   ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
   up_udelay(1000000);
+  ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+
+  fdusb = open(devpathin, O_RDWR|O_NONBLOCK);
+  if (fdusb < 0)
+    {
+      fprintf(stderr, "ERROR: open failed: %d\n", errno);
+      goto errout_with_buf;
+    }
+
+  ret = tcgetattr(fdusb, &tty);
+  if (ret < 0)
+    {
+      printf("ERROR: Failed to get termios: %s\n", strerror(errno));
+      goto errout_with_buf;
+    }
+
+  tty.c_oflag &= ~OPOST;
+
+  ret = tcsetattr(fdusb, TCSANOW, &tty);
+  if (ret < 0)
+    {
+      printf("ERROR: Failed to set termios: %s\n", strerror(errno));
+      goto errout_with_buf;
+    }
+
+  fds[0].fd = fdusb;
+  fds[0].events = POLLIN;
+
+  fdnina = open(devpathout, O_RDWR|O_NONBLOCK);
+  if (fdnina < 0)
+    {
+      fprintf(stderr, "ERROR: open failed: %d\n", errno);
+      goto errout_with_buf;
+    }
+
+  fds[1].fd = fdnina;
+  fds[1].events = POLLIN;
+
+  printf("Bridging %s with %s\n", devpathin, devpathout);
+  fflush(stdout);
 
   while (1)
     {
-      ssize_t n = read(fdin, buf, CONFIG_EXAMPLES_SERIALRX_BUFSIZE);
-      ret = write(fdout, buf, n);
-      if (n < 0 || ret < 0)
+      up_udelay(1000);
+      poll(fds, 2, -1);
+      if (fds[0].revents & POLLIN)
         {
-          printf("read failed: %d\n", errno);
-          fflush(stdout);
-          break;
+          ret = read(fdusb, buf, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+          if (ret > 0)
+            {
+              write(fdnina, buf, ret);
+            }
+          else if (ret < 0)
+            {
+              printf("read USB failed: %d\n", errno);
+              fflush(stdout);
+              break;
+            } 
         }
 
-      ssize_t n = read(fdout, buf, CONFIG_EXAMPLES_SERIALRX_BUFSIZE);
-      ret = write(fdin, buf, n);
-      if (n < 0 || ret < 0)
+      if (fds[1].revents & POLLIN)
         {
-          printf("read failed: %d\n", errno);
-          fflush(stdout);
-          break;
+          ret = read(fdnina, buf, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+          if (ret > 0)
+            {
+              write(fdusb, buf, ret); 
+            }
+          else if (ret < 0)
+            {
+              printf("read NINA failed: %d\n", errno);
+              fflush(stdout);
+              break;
+            }  
         }
-      up_udelay(1000);
     }
 
   printf("Terminated\n");
   fflush(stdout);
 
   up_udelay(1000000);
-  close(fdin);
-  close(fdout);
+  close(fdusb);
+  close(fdnina);
+  close(fdgpio0);
+  close(fdgpio1);
 
   free(buf);
   return EXIT_SUCCESS;
