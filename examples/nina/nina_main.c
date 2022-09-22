@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/serialrx/ninaboot_main.c
+ * apps/examples/nina/nina_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -39,42 +39,56 @@
  * Public Functions
  ****************************************************************************/
 
-/****************************************************************************
- * ninaboot_main
- ****************************************************************************/
+static void show_usage(FAR const char *progname)
+{
+  fprintf(stderr, "USAGE:\n");
+  fprintf(stderr, "\t%s start|boot\n", progname);
+  fprintf(stderr, "Where:\n");
+  fprintf(stderr, "\tstart is for normal boot\n");
+  fprintf(stderr, "\tboot is for boot mode\n");
+}
 
 int main(int argc, FAR char *argv[])
 {
-  int fdusb, fdnina, fdgpio0, fdgpio1;
+  int fdusb;
+  int fdnina;
+  int fdgpio0;
+  int fdgpio1;
   int ret;
-  char *buf, *buf2;
-  char *devpathin, *devpathout;
+  char *buf;
+  char *devpathin;
+  char *devpathout;
   struct pollfd fds[2];
   struct termios tty;
+  int cmd = 0;
 
-  if (argc == 1)
+  if (argc == 2)
     {
-      devpathin = CONFIG_EXAMPLES_NINABOOT_DEVPATH_IN;
-      devpathout = CONFIG_EXAMPLES_NINABOOT_DEVPATH_OUT;
-    }
-  else if (argc == 2)
-    {
-      devpathin = argv[1];
-      devpathout = CONFIG_EXAMPLES_NINABOOT_DEVPATH_OUT;
-    }
-  else if (argc == 3)
-    {
-          devpathin = argv[1];
-          devpathout = argv[2];
+      if (strcmp(argv[1],  "start") == 0)
+        {
+          cmd = 0;
+        } 
+      else if (strcmp(argv[1],  "boot") == 0)
+        {
+          cmd = 1;
+        }
+      else
+        {
+          show_usage(argv[0]);
+          goto errout; 
+        }
     }
   else
     {
-      fprintf(stderr, "Usage: %s [devpathin] [devpathout]\n", argv[0]);
+      show_usage(argv[0]);
       goto errout;
     }
 
-  buf = (char *)malloc(CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
-  memset(buf, 0, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+  devpathin = CONFIG_EXAMPLES_NINA_CONSOLE_DEVPATH;
+  devpathout = CONFIG_EXAMPLES_NINA_MODULE_DEVPATH;
+
+  buf = (char *)malloc(CONFIG_EXAMPLES_NINA_BUFSIZE);
+  memset(buf, 0, CONFIG_EXAMPLES_NINA_BUFSIZE);
   if (buf == NULL)
     {
       fprintf(stderr, "ERROR: malloc failed: %d\n", errno);
@@ -95,12 +109,26 @@ int main(int argc, FAR char *argv[])
       goto errout_with_buf;
     }
 
-  ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
-  ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
-  up_udelay(1000);
-  ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-  up_udelay(1000000);
-  ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+  if (cmd)
+    {
+      /* BOOT MODE */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      up_udelay(1000);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
+      up_udelay(100000);
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+    }
+  else
+    {
+      /* NORMAL BOOT */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      up_udelay(1000);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
+      up_udelay(100000); 
+    }
+  
 
   fdusb = open(devpathin, O_RDWR|O_NONBLOCK);
   if (fdusb < 0)
@@ -109,20 +137,25 @@ int main(int argc, FAR char *argv[])
       goto errout_with_buf;
     }
 
-  ret = tcgetattr(fdusb, &tty);
-  if (ret < 0)
+  if (cmd)
     {
-      printf("ERROR: Failed to get termios: %s\n", strerror(errno));
-      goto errout_with_buf;
-    }
+      ret = tcgetattr(fdusb, &tty);
+      if (ret < 0)
+        {
+          printf("ERROR: Failed to get termios: %s\n", strerror(errno));
+          close(fdusb);
+          goto errout_with_buf;
+        }
 
-  tty.c_oflag &= ~OPOST;
+      tty.c_oflag &= ~OPOST;
 
-  ret = tcsetattr(fdusb, TCSANOW, &tty);
-  if (ret < 0)
-    {
-      printf("ERROR: Failed to set termios: %s\n", strerror(errno));
-      goto errout_with_buf;
+      ret = tcsetattr(fdusb, TCSANOW, &tty);
+      if (ret < 0)
+        {
+          printf("ERROR: Failed to set termios: %s\n", strerror(errno));
+          close(fdusb);
+          goto errout_with_buf;
+        }
     }
 
   fds[0].fd = fdusb;
@@ -132,6 +165,7 @@ int main(int argc, FAR char *argv[])
   if (fdnina < 0)
     {
       fprintf(stderr, "ERROR: open failed: %d\n", errno);
+      close(fdusb);
       goto errout_with_buf;
     }
 
@@ -143,11 +177,10 @@ int main(int argc, FAR char *argv[])
 
   while (1)
     {
-      up_udelay(1000);
       poll(fds, 2, -1);
       if (fds[0].revents & POLLIN)
         {
-          ret = read(fdusb, buf, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+          ret = read(fdusb, buf, CONFIG_EXAMPLES_NINA_BUFSIZE);
           if (ret > 0)
             {
               write(fdnina, buf, ret);
@@ -162,7 +195,7 @@ int main(int argc, FAR char *argv[])
 
       if (fds[1].revents & POLLIN)
         {
-          ret = read(fdnina, buf, CONFIG_EXAMPLES_NINABOOT_BUFSIZE);
+          ret = read(fdnina, buf, CONFIG_EXAMPLES_NINA_BUFSIZE);
           if (ret > 0)
             {
               write(fdusb, buf, ret); 
@@ -179,7 +212,6 @@ int main(int argc, FAR char *argv[])
   printf("Terminated\n");
   fflush(stdout);
 
-  up_udelay(1000000);
   close(fdusb);
   close(fdnina);
   close(fdgpio0);
@@ -189,6 +221,8 @@ int main(int argc, FAR char *argv[])
   return EXIT_SUCCESS;
 
 errout_with_buf:
+  close(fdgpio0);
+  close(fdgpio1);
   free(buf);
 
 errout:

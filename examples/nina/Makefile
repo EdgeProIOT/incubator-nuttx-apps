@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/ninaboot/Make.defs
+# apps/examples/nina/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,15 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_EXAMPLES_NINABOOT),)
-CONFIGURED_APPS += $(APPDIR)/examples/ninaboot
-endif
+include $(APPDIR)/Make.defs
+
+MAINSRC = nina_main.c
+
+# Built-in application info
+
+PROGNAME = nina
+PRIORITY = $(CONFIG_EXAMPLES_NINA_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_NINA_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_NINA)
+
+include $(APPDIR)/Application.mk
