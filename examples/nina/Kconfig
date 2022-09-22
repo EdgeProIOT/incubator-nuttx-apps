@@ -1,0 +1,40 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_NINA
+	tristate "NINA Boot program"
+	default n
+	---help---
+		Enable the NINA Boot program
+
+if EXAMPLES_NINA
+
+config EXAMPLES_NINA_STACKSIZE
+	int "NINA stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+config EXAMPLES_NINA_PRIORITY
+	int "NINA task priority"
+	default 50
+
+config EXAMPLES_NINA_BUFSIZE
+	int "Buffer size"
+	default 4096
+	---help---
+		Specifies the default buffer size
+
+config EXAMPLES_NINA_CONSOLE_DEVPATH
+	string "Console serial device path"
+	default "/dev/ttyACM0"
+	---help---
+		The default path for the console serial device
+
+config EXAMPLES_NINA_MODULE_DEVPATH
+	string "Module serial device path"
+	default "/dev/ttyS1"
+	---help---
+		The default path for the module serial device
+
+endif
