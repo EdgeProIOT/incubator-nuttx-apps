@@ -21,7 +21,7 @@ config EXAMPLES_NINA_PRIORITY
 
 config EXAMPLES_NINA_BUFSIZE
 	int "Buffer size"
-	default 4096
+	default 64
 	---help---
 		Specifies the default buffer size
 
