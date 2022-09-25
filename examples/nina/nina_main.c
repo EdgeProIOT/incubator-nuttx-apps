@@ -42,10 +42,12 @@
 static void show_usage(FAR const char *progname)
 {
   fprintf(stderr, "USAGE:\n");
-  fprintf(stderr, "\t%s start|boot\n", progname);
+  fprintf(stderr, "\t%s boot|start|on|off\n", progname);
   fprintf(stderr, "Where:\n");
-  fprintf(stderr, "\tstart is for normal boot\n");
   fprintf(stderr, "\tboot is for boot mode\n");
+  fprintf(stderr, "\tstart is for normal boot\n");
+  fprintf(stderr, "\ton is for turning module on\n");
+  fprintf(stderr, "\toff is for turning module off\n");
 }
 
 int main(int argc, FAR char *argv[])
@@ -64,13 +66,21 @@ int main(int argc, FAR char *argv[])
 
   if (argc == 2)
     {
-      if (strcmp(argv[1],  "start") == 0)
+      if (strcmp(argv[1],  "boot") == 0)
         {
           cmd = 0;
         } 
-      else if (strcmp(argv[1],  "boot") == 0)
+      else if (strcmp(argv[1],  "start") == 0)
         {
           cmd = 1;
+        }
+      else if (strcmp(argv[1],  "on") == 0)
+        {
+          cmd = 2;
+        }
+      else if (strcmp(argv[1],  "off") == 0)
+        {
+          cmd = 3;
         }
       else
         {
@@ -84,6 +94,63 @@ int main(int argc, FAR char *argv[])
       goto errout;
     }
 
+  fdgpio0 = open("/dev/gpio0", O_RDWR);
+  if (fdgpio0 < 0)
+    {
+      fprintf(stderr, "ERROR: open failed: %d\n", errno);
+      goto errout;
+    }
+
+  fdgpio1 = open("/dev/gpio1", O_RDWR);
+  if (fdgpio1 < 0)
+    {
+      fprintf(stderr, "ERROR: open failed: %d\n", errno);
+      close(fdgpio0);
+      goto errout;
+    }
+
+  if (cmd == 0)
+    {
+      /* BOOT MODE */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      up_udelay(1000);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
+      //up_udelay(100000);
+      //ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+    }
+  else if (cmd == 1)
+    {
+      /* NORMAL BOOT */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      up_udelay(1000);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
+      //up_udelay(200000); 
+    }
+  else if (cmd == 2)
+    {
+      /* ON */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      up_udelay(1000);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
+      //up_udelay(100000);
+      close(fdgpio0);
+      close(fdgpio1);
+      return EXIT_SUCCESS;
+    }
+  else if (cmd == 3)
+    {
+      /* OFF */
+      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
+      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
+      //up_udelay(100000);
+      close(fdgpio0);
+      close(fdgpio1);
+      return EXIT_SUCCESS;
+    }
+  
   devpathin = CONFIG_EXAMPLES_NINA_CONSOLE_DEVPATH;
   devpathout = CONFIG_EXAMPLES_NINA_MODULE_DEVPATH;
 
@@ -95,41 +162,6 @@ int main(int argc, FAR char *argv[])
       goto errout;
     }
 
-  fdgpio0 = open("/dev/gpio0", O_RDWR);
-  if (fdgpio0 < 0)
-    {
-      fprintf(stderr, "ERROR: open failed: %d\n", errno);
-      goto errout_with_buf;
-    }
-
-  fdgpio1 = open("/dev/gpio1", O_RDWR);
-  if (fdgpio1 < 0)
-    {
-      fprintf(stderr, "ERROR: open failed: %d\n", errno);
-      goto errout_with_buf;
-    }
-
-  if (cmd)
-    {
-      /* BOOT MODE */
-      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
-      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
-      up_udelay(1000);
-      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-      up_udelay(100000);
-      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
-    }
-  else
-    {
-      /* NORMAL BOOT */
-      ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
-      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
-      up_udelay(1000);
-      ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-      up_udelay(100000); 
-    }
-  
-
   fdusb = open(devpathin, O_RDWR|O_NONBLOCK);
   if (fdusb < 0)
     {
@@ -137,7 +169,7 @@ int main(int argc, FAR char *argv[])
       goto errout_with_buf;
     }
 
-  if (cmd)
+  if (cmd == 0)
     {
       ret = tcgetattr(fdusb, &tty);
       if (ret < 0)
@@ -172,7 +204,7 @@ int main(int argc, FAR char *argv[])
   fds[1].fd = fdnina;
   fds[1].events = POLLIN;
 
-  printf("Bridging %s with %s\n", devpathin, devpathout);
+  //printf("Bridging %s with %s\n", devpathin, devpathout);
   fflush(stdout);
 
   while (1)
