@@ -292,13 +292,15 @@ int main(int argc, FAR char *argv[])
 
   /* Determine the size and position of the window */
 
-  g_nxterm_vars.wndo.wsize.w = g_nxterm_vars.xres / 2 +
-                               g_nxterm_vars.xres / 4;
-  g_nxterm_vars.wndo.wsize.h = g_nxterm_vars.yres / 2 +
-                               g_nxterm_vars.yres / 4;
+  g_nxterm_vars.wndo.wsize.w = g_nxterm_vars.xres;
+                               //g_nxterm_vars.xres / 2 +
+                               //g_nxterm_vars.xres / 4;
+  g_nxterm_vars.wndo.wsize.h = g_nxterm_vars.yres;
+                               //g_nxterm_vars.yres / 2 +
+                               //g_nxterm_vars.yres / 4;
 
-  g_nxterm_vars.wpos.x       = g_nxterm_vars.xres / 8;
-  g_nxterm_vars.wpos.y       = g_nxterm_vars.yres / 8;
+  g_nxterm_vars.wpos.x       = 0;//g_nxterm_vars.xres / 8;
+  g_nxterm_vars.wpos.y       = 0;//g_nxterm_vars.yres / 8;
 
   /* Set the window position */
 
@@ -326,15 +328,15 @@ int main(int argc, FAR char *argv[])
 
   /* Open the toolbar */
 
-  printf("nxterm_main: Add toolbar to window\n");
-  ret = nxtk_opentoolbar(g_nxterm_vars.hwnd,
-                         CONFIG_EXAMPLES_NXTERM_TOOLBAR_HEIGHT,
-                         &g_nxtoolcb, NULL);
-  if (ret < 0)
-    {
-      printf("nxterm_main: nxtk_opentoolbar failed: %d\n", errno);
-      goto errout_with_hwnd;
-    }
+  // printf("nxterm_main: Add toolbar to window\n");
+  // ret = nxtk_opentoolbar(g_nxterm_vars.hwnd,
+  //                        CONFIG_EXAMPLES_NXTERM_TOOLBAR_HEIGHT,
+  //                        &g_nxtoolcb, NULL);
+  // if (ret < 0)
+  //   {
+  //     printf("nxterm_main: nxtk_opentoolbar failed: %d\n", errno);
+  //     goto errout_with_hwnd;
+  //   }
 
   /* Sleep a little bit to allow the server to catch up */
 
