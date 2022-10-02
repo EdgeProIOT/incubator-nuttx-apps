@@ -69,7 +69,7 @@ int main(int argc, FAR char *argv[])
       if (strcmp(argv[1],  "boot") == 0)
         {
           cmd = 0;
-        } 
+        }
       else if (strcmp(argv[1],  "start") == 0)
         {
           cmd = 1;
@@ -85,7 +85,7 @@ int main(int argc, FAR char *argv[])
       else
         {
           show_usage(argv[0]);
-          goto errout; 
+          goto errout;
         }
     }
   else
@@ -95,6 +95,7 @@ int main(int argc, FAR char *argv[])
     }
 
   fdgpio0 = open("/dev/gpio0", O_RDWR);
+
   if (fdgpio0 < 0)
     {
       fprintf(stderr, "ERROR: open failed: %d\n", errno);
@@ -102,6 +103,7 @@ int main(int argc, FAR char *argv[])
     }
 
   fdgpio1 = open("/dev/gpio1", O_RDWR);
+
   if (fdgpio1 < 0)
     {
       fprintf(stderr, "ERROR: open failed: %d\n", errno);
@@ -112,57 +114,62 @@ int main(int argc, FAR char *argv[])
   if (cmd == 0)
     {
       /* BOOT MODE */
+
       ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)0);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
       up_udelay(1000);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-      //up_udelay(100000);
-      //ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
     }
   else if (cmd == 1)
     {
       /* NORMAL BOOT */
+
       ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
       up_udelay(1000);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-      //up_udelay(200000); 
     }
   else if (cmd == 2)
     {
       /* ON */
+
       ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
       up_udelay(1000);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)1);
-      //up_udelay(100000);
+
       close(fdgpio0);
       close(fdgpio1);
+
       return EXIT_SUCCESS;
     }
   else if (cmd == 3)
     {
       /* OFF */
+
       ret = ioctl(fdgpio1, GPIOC_WRITE, (unsigned long)1);
       ret = ioctl(fdgpio0, GPIOC_WRITE, (unsigned long)0);
-      //up_udelay(100000);
+
       close(fdgpio0);
       close(fdgpio1);
+
       return EXIT_SUCCESS;
     }
-  
+
   devpathin = CONFIG_EXAMPLES_NINA_CONSOLE_DEVPATH;
   devpathout = CONFIG_EXAMPLES_NINA_MODULE_DEVPATH;
 
   buf = (char *)malloc(CONFIG_EXAMPLES_NINA_BUFSIZE);
   memset(buf, 0, CONFIG_EXAMPLES_NINA_BUFSIZE);
+
   if (buf == NULL)
     {
       fprintf(stderr, "ERROR: malloc failed: %d\n", errno);
       goto errout;
     }
 
-  fdusb = open(devpathin, O_RDWR|O_NONBLOCK);
+  fdusb = open(devpathin, O_RDWR | O_NONBLOCK);
+
   if (fdusb < 0)
     {
       fprintf(stderr, "ERROR: open failed: %d\n", errno);
@@ -172,6 +179,7 @@ int main(int argc, FAR char *argv[])
   if (cmd == 0)
     {
       ret = tcgetattr(fdusb, &tty);
+
       if (ret < 0)
         {
           printf("ERROR: Failed to get termios: %s\n", strerror(errno));
@@ -182,6 +190,7 @@ int main(int argc, FAR char *argv[])
       tty.c_oflag &= ~OPOST;
 
       ret = tcsetattr(fdusb, TCSANOW, &tty);
+
       if (ret < 0)
         {
           printf("ERROR: Failed to set termios: %s\n", strerror(errno));
@@ -193,7 +202,8 @@ int main(int argc, FAR char *argv[])
   fds[0].fd = fdusb;
   fds[0].events = POLLIN;
 
-  fdnina = open(devpathout, O_RDWR|O_NONBLOCK);
+  fdnina = open(devpathout, O_RDWR | O_NONBLOCK);
+
   if (fdnina < 0)
     {
       fprintf(stderr, "ERROR: open failed: %d\n", errno);
@@ -204,15 +214,16 @@ int main(int argc, FAR char *argv[])
   fds[1].fd = fdnina;
   fds[1].events = POLLIN;
 
-  //printf("Bridging %s with %s\n", devpathin, devpathout);
   fflush(stdout);
 
   while (1)
     {
       poll(fds, 2, -1);
+
       if (fds[0].revents & POLLIN)
         {
           ret = read(fdusb, buf, CONFIG_EXAMPLES_NINA_BUFSIZE);
+
           if (ret > 0)
             {
               write(fdnina, buf, ret);
@@ -222,22 +233,23 @@ int main(int argc, FAR char *argv[])
               printf("read USB failed: %d\n", errno);
               fflush(stdout);
               break;
-            } 
+            }
         }
 
       if (fds[1].revents & POLLIN)
         {
           ret = read(fdnina, buf, CONFIG_EXAMPLES_NINA_BUFSIZE);
+
           if (ret > 0)
             {
-              write(fdusb, buf, ret); 
+              write(fdusb, buf, ret);
             }
           else if (ret < 0)
             {
               printf("read NINA failed: %d\n", errno);
               fflush(stdout);
               break;
-            }  
+            }
         }
     }
 
