@@ -1,0 +1,18 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config NETUTILS_NNG
+	tristate "Enable Nanomsg NG"
+	default n
+	---help---
+		Enable NNG
+
+if NETUTILS_NNG
+
+config NETUTILS_NNG_VERSION
+	string "NNG Version"
+	default "1.5.2"
+
+endif
