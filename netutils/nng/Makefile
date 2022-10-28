@@ -27,6 +27,13 @@ NNG_SRCDIR   = $(NNG_UNPACK)$(DELIM)src
 
 CFLAGS += -I$(NNG_UNPACK)/src
 CFLAGS += -DNNG_PLATFORM_POSIX
+CFLAGS += -DNNG_HAVE_GETRANDOM
+CFLAGS += -DNNG_TRANSPORT_INPROC
+CFLAGS += -DNNG_TRANSPORT_IPC
+CFLAGS += -DNNG_TRANSPORT_TCP
+CFLAGS += -DNNG_TRANSPORT_TLS
+CFLAGS += -DNNG_TRANSPORT_WS
+CFLAGS += -DNNG_TRANSPORT_WSS
 
 DEPPATH += --dep-path $(NNG_SRCDIR)
 VPATH   += :$(NNG_SRCDIR)
@@ -78,7 +85,8 @@ CSRCS += $(NNG_SRCDIR)/platform/posix/posix_tcplisten.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_thread.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_udp.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_pollq_poll.c
-CSRCS += $(NNG_SRCDIR)/platform/posix/posix_rand_urandom.c
+CSRCS += $(NNG_SRCDIR)/platform/posix/posix_rand_getrandom.c
+#CSRCS += $(NNG_SRCDIR)/platform/posix/posix_rand_urandom.c
 
 CSRCS += $(NNG_SRCDIR)/sp/transport.c
 CSRCS += $(NNG_SRCDIR)/sp/protocol/bus0/bus.c
@@ -101,7 +109,7 @@ CSRCS += $(NNG_SRCDIR)/sp/protocol/survey0/xsurvey.c
 CSRCS += $(NNG_SRCDIR)/sp/transport/inproc/inproc.c
 CSRCS += $(NNG_SRCDIR)/sp/transport/ipc/ipc.c
 CSRCS += $(NNG_SRCDIR)/sp/transport/tcp/tcp.c
-#CSRCS += $(NNG_SRCDIR)/sp/transport/tls/tls.c
+CSRCS += $(NNG_SRCDIR)/sp/transport/tls/tls.c
 CSRCS += $(NNG_SRCDIR)/sp/transport/ws/websocket.c
 
 CSRCS += $(NNG_SRCDIR)/supplemental/base64/base64.c
@@ -113,7 +121,7 @@ CSRCS += $(NNG_SRCDIR)/supplemental/http/http_public.c
 CSRCS += $(NNG_SRCDIR)/supplemental/http/http_schemes.c
 CSRCS += $(NNG_SRCDIR)/supplemental/http/http_server.c
 CSRCS += $(NNG_SRCDIR)/supplemental/sha1/sha1.c
-#CSRCS += $(NNG_SRCDIR)/supplemental/tls/tls_common.c
+CSRCS += $(NNG_SRCDIR)/supplemental/tls/tls_common.c
 #CSRCS += $(NNG_SRCDIR)/supplemental/tls/mbedtls/tls.c
 #CSRCS += $(NNG_SRCDIR)/supplemental/util/options.c
 CSRCS += $(NNG_SRCDIR)/supplemental/util/platform.c
