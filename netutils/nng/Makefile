@@ -35,6 +35,10 @@ CFLAGS += -DNNG_TRANSPORT_TLS
 CFLAGS += -DNNG_TRANSPORT_WS
 CFLAGS += -DNNG_TRANSPORT_WSS
 
+CFLAGS += -DNNG_USE_EVENTFD
+CFLAGS += -DNNG_HAVE_EPOLL
+CFLAGS += -DNNG_HAVE_EPOLL_CREATE1
+
 DEPPATH += --dep-path $(NNG_SRCDIR)
 VPATH   += :$(NNG_SRCDIR)
 
@@ -84,7 +88,7 @@ CSRCS += $(NNG_SRCDIR)/platform/posix/posix_tcpdial.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_tcplisten.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_thread.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_udp.c
-CSRCS += $(NNG_SRCDIR)/platform/posix/posix_pollq_poll.c
+CSRCS += $(NNG_SRCDIR)/platform/posix/posix_pollq_epoll.c
 CSRCS += $(NNG_SRCDIR)/platform/posix/posix_rand_getrandom.c
 #CSRCS += $(NNG_SRCDIR)/platform/posix/posix_rand_urandom.c
 
