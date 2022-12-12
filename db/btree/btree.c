@@ -661,6 +661,7 @@ struct btree_txn *
 btree_txn_begin(struct btree *bt, int rdonly)
 {
 	struct btree_txn	*txn;
+
 	struct flock 		fl;
     
 	if (!rdonly && bt->txn != NULL) {

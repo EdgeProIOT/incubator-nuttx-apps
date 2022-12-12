@@ -84,7 +84,7 @@ main(const int argc, const char **argv)
 
 	for (;;) {
 		char *d = date();
-		//printf("SERVER: PUBLISHING DATE %s\n", d);
+		printf("SERVER: PUBLISHING DATE %s\n", d);
 		if ((rv = nng_send(sock, d, strlen(d) + 1, 0)) != 0) {
 			fatal("nng_send", rv);
 		}

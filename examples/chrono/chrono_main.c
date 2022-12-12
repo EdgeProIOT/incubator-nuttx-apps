@@ -207,7 +207,6 @@ errout_with_fd:
   close(fd);
 
 errout:
-
   printf("chrono_daemon: Terminating\n");
   return EXIT_FAILURE;
 }
@@ -343,7 +342,7 @@ int main(int argc, FAR char *argv[])
       /* Initialize the output stream */
 
       memset(priv, 0, sizeof(struct slcd_chrono_s));
-      priv->stream.put   = slcd_putc;
+      priv->stream.putc  = slcd_putc;
 #ifdef CONFIG_STDIO_LINEBUFFER
       priv->stream.flush = slcd_flush;
 #endif

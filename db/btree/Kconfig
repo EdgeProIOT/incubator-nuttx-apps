@@ -8,3 +8,7 @@ config DB_BTREE
 	default n
 	---help---
 		Enable the BTree library
+
+if DB_BTREE
+
+endif

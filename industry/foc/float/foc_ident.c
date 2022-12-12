@@ -39,7 +39,6 @@
  ****************************************************************************/
 
 #define IDENT_PI_KP           (0.0f)
-#define IDENT_PI_KI           (0.05f)
 
 /****************************************************************************
  * Private Data Types
@@ -82,6 +81,7 @@ struct foc_ident_f32_s
   float                                sign;
   float                                curr1_sum;
   float                                curr2_sum;
+
 #ifdef CONFIG_INDUSTRY_FOC_IDENT_FLUX
   /* global data in flux linkage identification */
 
@@ -194,7 +194,8 @@ int foc_ident_res_run_f32(FAR struct foc_ident_f32_s *ident,
 
   if (ident->cntr == 0)
     {
-      pi_controller_init(&ident->pi, IDENT_PI_KP, IDENT_PI_KI);
+      DEBUGASSERT(ident->cfg.res_ki > 0.0f);
+      pi_controller_init(&ident->pi, IDENT_PI_KP, ident->cfg.res_ki);
     }
 
   /* PI saturation */
@@ -571,6 +572,12 @@ int foc_routine_ident_cfg_f32(FAR foc_routine_f32_t *r, FAR void *cfg)
   /* Verify configuration */
 
   if (i->cfg.per <= 0.0f)
+    {
+      ret = -EINVAL;
+      goto errout;
+    }
+
+  if (i->cfg.res_ki <= 0.0f)
     {
       ret = -EINVAL;
       goto errout;

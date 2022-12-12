@@ -194,7 +194,7 @@ static void no_block_connect(FAR struct usrsocktest_daemon_conf_s *dconf)
 
   dconf->endpoint_addr = "127.0.0.1";
   dconf->endpoint_port = 255;
-  dconf->endpoint_block_connect = true;
+  dconf->endpoint_block_connect = false;
   dconf->endpoint_block_send = true;
   dconf->endpoint_recv_avail_from_start = true;
   dconf->endpoint_recv_avail = 6;
@@ -356,8 +356,7 @@ static void receive_timeout(FAR struct usrsocktest_daemon_conf_s *dconf)
 
   tv.tv_sec = 0;
   tv.tv_usec = 100 * 1000;
-  ret = setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (FAR const void *)&tv,
-                   sizeof(tv));
+  ret = setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
   TEST_ASSERT_EQUAL(0, ret);
 
   /* Receive data from remote */

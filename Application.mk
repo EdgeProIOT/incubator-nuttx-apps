@@ -42,11 +42,9 @@ else
 CWD = $(CURDIR)
 endif
 
-# Add the static application library to the linked libraries. Don't do this
-# with CONFIG_BUILD_KERNEL as there is no static app library
-ifneq ($(CONFIG_BUILD_KERNEL),y)
-  LDLIBS += $(call CONVERT_PATH,$(BIN))
-endif
+# Add the static application library to the linked libraries.
+
+LDLIBS += $(call CONVERT_PATH,$(BIN))
 
 # When building a module, link with the compiler runtime.
 # This should be linked after libapps. Consider that mbedtls in libapps
@@ -64,7 +62,8 @@ ifeq ($(BUILD_MODULE),y)
 endif
 
 SUFFIX = $(subst $(DELIM),.,$(CWD))
-PROGNAME := $(shell echo $(PROGNAME))
+
+PROGNAME := $(subst ",,$(PROGNAME))
 
 # Object files
 
@@ -201,8 +200,8 @@ $(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
-	$(eval $<_CFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
-	$(eval $<_CELFFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
+	$(eval $<_CFLAGS += ${DEFINE_PREFIX}main=$(firstword $(MAINNAME)))
+	$(eval $<_CELFFLAGS += ${DEFINE_PREFIX}main=$(firstword $(MAINNAME)))
 	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))

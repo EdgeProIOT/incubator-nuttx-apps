@@ -71,6 +71,9 @@ CSRCS += $(MCUBOOT_UNPACK)/ext/tinycrypt/lib/source/aes_encrypt.c \
          $(MCUBOOT_UNPACK)/ext/tinycrypt/lib/source/ecc_dh.c \
          $(MCUBOOT_UNPACK)/ext/tinycrypt/lib/source/sha256.c \
          $(MCUBOOT_UNPACK)/ext/tinycrypt/lib/source/utils.c
+
+CFLAGS += ${INCDIR_PREFIX}mcuboot/ext/tinycrypt/lib/include
+CXXFLAGS += ${INCDIR_PREFIX}mcuboot/ext/tinycrypt/lib/include
 endif
 
 $(MCUBOOT_TARBALL):

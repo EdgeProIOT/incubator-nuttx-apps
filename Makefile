@@ -21,6 +21,16 @@
 export APPDIR = $(CURDIR)
 include $(APPDIR)/Make.defs
 
+# The GNU make CURDIR will always be a POSIX-like path with forward slashes
+# as path segment separators.  This is fine for the above inclusions but
+# will cause problems later for the native build.  If we know that this is
+# a native build, then we need to fix up the APPDIR path for subsequent
+# use
+
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+export APPDIR = $(subst /,\,$(CURDIR))
+endif
+
 # Symbol table for loadable apps.
 
 SYMTABSRC = symtab_apps.c
@@ -62,10 +72,12 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
-.import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
 		$(MAKE) -C "$${app}" archive ; \
 	done
+
+.import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
 
@@ -81,11 +93,15 @@ else
 # symbol table is required.
 
 ifeq ($(CONFIG_BUILD_LOADABLE),)
-
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for %%G in ($(CONFIGURED_APPS)) do ( $(MAKE) -C %%G archive )
+else
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
 		$(MAKE) -C "$${app}" archive ; \
 	done
+endif
 
 else
 
@@ -158,7 +174,9 @@ ifneq ($(EXPORTDIR),)
 ifneq ($(CONFIG_BUILD_KERNEL),y)
 ifneq ($(BUILTIN_REGISTRY),)
 	for f in "${BUILTIN_REGISTRY}"$(DELIM)*.bdat "${BUILTIN_REGISTRY}"$(DELIM)*.pdat ; do \
-		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
+		if [ -f "$${f}" ]; then \
+			cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
+		fi \
 	done
 endif
 endif
@@ -185,13 +203,13 @@ clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-	$(Q) ( if exist  external ( \
-		echo ********************************************************" \
-		echo * The external directory/link must be removed manually *" \
-		echo ********************************************************" \
+	$(Q) ( if exist  external \
+		echo "********************************************************" \
+		echo "* The external directory/link must be removed manually *" \
+		echo "********************************************************" \
 	)
 else
-	$(Q) ( if [ -e external ]; then \
+	$(Q) (if [ -e external ]; then \
 		echo "********************************************************"; \
 		echo "* The external directory/link must be removed manually *"; \
 		echo "********************************************************"; \
