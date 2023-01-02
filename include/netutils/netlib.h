@@ -268,14 +268,16 @@ int netlib_setessid(FAR const char *ifname, FAR const char *essid);
 #ifdef CONFIG_NET_ARP
 /* ARP Table Support */
 
-int netlib_del_arpmapping(FAR const struct sockaddr_in *inaddr);
+int netlib_del_arpmapping(FAR const struct sockaddr_in *inaddr,
+                          FAR const char *ifname);
 int netlib_get_arpmapping(FAR const struct sockaddr_in *inaddr,
-                          FAR uint8_t *macaddr);
+                          FAR uint8_t *macaddr, FAR const char *ifname);
 int netlib_set_arpmapping(FAR const struct sockaddr_in *inaddr,
-                          FAR const uint8_t *macaddr);
+                          FAR const uint8_t *macaddr,
+                          FAR const char *ifname);
 #ifdef CONFIG_NETLINK_ROUTE
-struct arp_entry_s;
-ssize_t netlib_get_arptable(FAR struct arp_entry_s *arptab,
+struct arpreq;
+ssize_t netlib_get_arptable(FAR struct arpreq *arptab,
                             unsigned int nentries);
 #endif
 #endif
@@ -309,6 +311,30 @@ ssize_t netlib_get_route(FAR struct rtentry *rtelist,
 /* ICMPv6 Autoconfiguration */
 
 int netlib_icmpv6_autoconfiguration(FAR const char *ifname);
+#endif
+
+#ifdef CONFIG_NET_IPTABLES
+/* iptables interface support */
+
+struct ipt_replace;  /* Forward reference */
+struct ipt_entry;    /* Forward reference */
+enum nf_inet_hooks;  /* Forward reference */
+
+FAR struct ipt_replace *netlib_ipt_prepare(FAR const char *table);
+int netlib_ipt_commit(FAR const struct ipt_replace *repl);
+int netlib_ipt_flush(FAR const char *table, enum nf_inet_hooks hook);
+int netlib_ipt_append(FAR struct ipt_replace **repl,
+                      FAR const struct ipt_entry *entry,
+                      enum nf_inet_hooks hook);
+int netlib_ipt_insert(FAR struct ipt_replace **repl,
+                      FAR const struct ipt_entry *entry,
+                      enum nf_inet_hooks hook, int rulenum);
+int netlib_ipt_delete(FAR struct ipt_replace *repl,
+                      FAR const struct ipt_entry *entry,
+                      enum nf_inet_hooks hook, int rulenum);
+#  ifdef CONFIG_NET_NAT
+FAR struct ipt_entry *netlib_ipt_masquerade_entry(FAR const char *ifname);
+#  endif
 #endif
 
 /* HTTP support */

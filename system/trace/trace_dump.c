@@ -128,11 +128,10 @@ static void note_ioctl(int cmd, unsigned long arg)
 {
   int notefd;
 
-  notefd = open("/dev/note", O_RDONLY);
+  notefd = open("/dev/note/ram", O_RDONLY);
   if (notefd < 0)
     {
-      fprintf(stderr,
-             "trace: cannot open /dev/note\n");
+      fprintf(stderr, "trace: cannot open /dev/note/ram\n");
       return;
     }
 
@@ -247,7 +246,7 @@ FAR static struct trace_dump_task_context_s *get_task_context(pid_t pid,
       (*tctxp)->syscall_nest = 0;
       (*tctxp)->name[0] = '\0';
 
-#if CONFIG_DRIVER_NOTERAM_TASKNAME_BUFSIZE > 0
+#ifdef NOTERAM_GETTASKNAME
         {
           struct noteram_get_taskname_s tnm;
           int res;
@@ -713,11 +712,10 @@ int trace_dump(trace_dump_t type, FAR FILE *out)
 
   /* Open note for read */
 
-  fd = open("/dev/note", O_RDONLY);
+  fd = open("/dev/note/ram", O_RDONLY);
   if (fd < 0)
     {
-      fprintf(stderr,
-              "trace: cannot open /dev/note\n");
+      fprintf(stderr, "trace: cannot open /dev/note/ram\n");
       return ERROR;
     }
 
