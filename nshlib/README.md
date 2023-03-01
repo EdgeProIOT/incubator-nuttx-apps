@@ -670,7 +670,7 @@ system image.
 
   Dump data in hexadecimal format from a file or character device.
 
-- `ifconfig [nic_name [address_family] [<ip-address>|dhcp]] [dr|gw|gateway <dr-address>] [netmask <net-mask>] [prefixlen <len>] [dns <dns-address>] [hw <hw-mac>]`
+- `ifconfig [nic_name [address_family] [<ip-address>|dhcp]] [dr|gw|gateway <dr-address>] [netmask <net-mask>|prefixlen <len>] [dns <dns-address>] [hw <hw-mac>]`
 
   Show the current configuration of the network, for example:
 
@@ -1616,7 +1616,7 @@ rptun     | `CONFIG_RPTUN`
 set       | `CONFIG_NSH_VARS` || !`CONFIG_DISABLE_ENVIRON`
 shutdown  | `CONFIG_BOARDCTL_POWEROFF` || `CONFIG_BOARDCTL_RESET`
 sleep     | -
-source    | `CONFIG_FILE_STREAM` && !`CONFIG_NSH_DISABLESCRIPT`
+source    | !`CONFIG_NSH_DISABLESCRIPT`
 test      | !`CONFIG_NSH_DISABLESCRIPT`
 telnetd   | `CONFIG_NSH_TELNET` && `CONFIG_SYSTEM_TELNETD`
 time      | -

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/usrsock_rpmsg/usrsock_rpmsg.h
+ * apps/testing/drivertest/drivertest_simple.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,44 +18,46 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_USRSOCK_RPMSG_H
-#define __APPS_NETUTILS_USRSOCK_RPMSG_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
-
-#include <nuttx/net/usrsock.h>
-
-/****************************************************************************
- * Pre-processor definitions
- ****************************************************************************/
-
-#define USRSOCK_RPMSG_EPT_NAME      "rpmsg-usrsock"
-
-#define USRSOCK_RPMSG_DNS_REQUEST    USRSOCK_REQUEST__MAX
-#define USRSOCK_RPMSG_DNS_EVENT      127
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <stdint.h>
+#include <cmocka.h>
 
 /****************************************************************************
- * Public Types
+ * Private Functions
  ****************************************************************************/
 
-/* DNS request message */
-
-begin_packed_struct struct usrsock_rpmsg_dns_request_s
+static void test_case_01(FAR void **state)
 {
-  struct usrsock_request_common_s head;
+  UNUSED(state);
+  assert_int_equal(0, 0);
+}
 
-  uint16_t addrlen;
-} end_packed_struct;
-
-/* DNS event message */
-
-begin_packed_struct struct usrsock_rpmsg_dns_event_s
+static void test_case_02(FAR void **state)
 {
-  struct usrsock_message_common_s head;
+  UNUSED(state);
+  assert_string_not_equal("hello", "world");
+}
 
-  uint16_t addrlen;
-} end_packed_struct;
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
-#endif /* __APPS_NETUTILS_USRSOCK_RPMSG_H */
+/****************************************************************************
+ * drivertest_simple_main
+ ****************************************************************************/
+
+int main(int argc, FAR char *argv[])
+{
+  const struct CMUnitTest tests[] =
+  {
+    cmocka_unit_test(test_case_01),
+    cmocka_unit_test(test_case_02),
+  };
+
+  return cmocka_run_group_tests(tests, NULL, NULL);
+}

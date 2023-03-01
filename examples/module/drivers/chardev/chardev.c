@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 
+#include <sys/param.h>
 #include <sys/types.h>
 #include <stdbool.h>
 #include <string.h>
@@ -34,14 +35,6 @@
 #include <nuttx/module.h>
 #include <nuttx/lib/modlib.h>
 #include <nuttx/fs/fs.h>
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#ifndef MIN
-#  define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif
 
 /****************************************************************************
  * Private data
@@ -68,12 +61,6 @@ static const struct file_operations chardev_fops =
   NULL,          /* close */
   chardev_read,  /* read */
   chardev_write, /* write */
-  NULL,          /* seek */
-  NULL,          /* ioctl */
-  NULL           /* poll */
-#ifndef CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-  , NULL         /* unlink */
-#endif
 };
 
 /****************************************************************************
@@ -93,7 +80,8 @@ static ssize_t chardev_read(FAR struct file *filep, FAR char *buffer,
   memcpy(buffer, g_read_string, ret);
 
   syslog(LOG_INFO, "chardev_read: Returning %d bytes\n", (int)ret);
-  lib_dumpbuffer("chardev_read: Returning", (FAR const uint8_t *)buffer, ret);
+  lib_dumpbuffer("chardev_read: Returning",
+                 (FAR const uint8_t *)buffer, ret);
   return ret;
 }
 

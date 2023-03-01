@@ -31,6 +31,8 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <nuttx/timers/timer.h>
 #include <nuttx/ioexpander/gpio.h>
 
@@ -182,7 +184,6 @@ static int timer_gpio_daemon(int argc, char *argv[])
   notify.event.sigev_notify = SIGEV_SIGNAL;
   notify.event.sigev_signo  = CONFIG_EXAMPLES_TIMER_GPIO_SIGNO;
   notify.event.sigev_value.sival_ptr = NULL;
-  notify.oneshot = false;
 
   ret = ioctl(fd_timer, TCIOC_NOTIFICATION,
               (unsigned long)((uintptr_t)&notify));
@@ -266,8 +267,10 @@ int main(int argc, FAR char *argv[])
 
   /* Use the ones configured on menuconfig */
 
-  strcpy(g_devtim, CONFIG_EXAMPLES_TIMER_GPIO_TIM_DEVNAME);
-  strcpy(g_devgpio, CONFIG_EXAMPLES_TIMER_GPIO_GPIO_DEVNAME);
+  strlcpy(g_devtim, CONFIG_EXAMPLES_TIMER_GPIO_TIM_DEVNAME,
+          sizeof(g_devtim));
+  strlcpy(g_devgpio, CONFIG_EXAMPLES_TIMER_GPIO_GPIO_DEVNAME,
+          sizeof(g_devgpio));
 
   /* Or the ones passed as arguments */
 
@@ -276,10 +279,10 @@ int main(int argc, FAR char *argv[])
       switch (opt)
       {
         case 't':
-            strcpy(g_devtim, optarg);
+            strlcpy(g_devtim, optarg, sizeof(g_devtim));
             break;
         case 'g':
-            strcpy(g_devgpio, optarg);
+            strlcpy(g_devgpio, optarg, sizeof(g_devgpio));
             break;
         case ':':
             fprintf(stderr, "ERROR: Option needs a value\n");

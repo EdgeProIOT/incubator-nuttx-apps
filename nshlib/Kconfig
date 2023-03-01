@@ -125,8 +125,9 @@ config NSH_QUOTE
 
 config NSH_CMDPARMS
 	bool "Enable commands as parameters"
-	default !DEFAULT_SMALL
+	default !DEFAULT_SMALL && NSH_QUOTE
 	depends on !DISABLE_MOUNTPOINT
+	depends on FS_TMPFS
 	---help---
 		If selected, then the output from commands, from file applications, and
 		from NSH built-in commands can be used as arguments to other
@@ -141,6 +142,8 @@ config NSH_CMDPARMS
 
 		Because this feature commits significant resources, it is disabled by
 		default.
+
+		This features requires TMPFS mounted at /tmp and NSH_QUOTE enabled.
 
 config NSH_MAXARGUMENTS
 	int "Maximum number of command arguments"
@@ -373,6 +376,10 @@ config NSH_DISABLE_LOSETUP
 config NSH_DISABLE_LOSMART
 	bool "Disable losmart"
 	default DEFAULT_SMALL || !MTD_SMART
+
+config NSH_DISABLE_LOMTD
+	bool "Disable lomtd"
+	default DEFAULT_SMALL || !MTD_LOOP
 
 config NSH_DISABLE_LN
 	bool "Disable ln"
@@ -1264,37 +1271,37 @@ config NSH_LOGIN_FAILCOUNT
 		Number of login retry attempts.
 
 config NSH_PLATFORM_CHALLENGE
-        bool "Platform challenge"
-        default n
-        depends on NSH_LOGIN_PLATFORM
-        ---help---
-                If this option is selected, the NSH will call into platform-specific
-                logic in order to get the challenge.  The function prototype for this
-                call is:
+	bool "Platform challenge"
+	default n
+	depends on NSH_LOGIN_PLATFORM
+	---help---
+		If this option is selected, the NSH will call into platform-specific
+		logic in order to get the challenge.  The function prototype for this
+		call is:
 
-                        void platform_challenge(FAR char *buffer, size_t buflen);
+			void platform_challenge(FAR char *buffer, size_t buflen);
 
-                Where buffer is the location to return the challenge and buflen is the
-                length of that buffer.  The maximum size of the buffer is determined
-                by NSH_FILEIOSIZE.  An appropriate location for the
-                implementation of platform_challenge would be within apps/platform/<board>.
+		Where buffer is the location to return the challenge and buflen is the
+		length of that buffer.  The maximum size of the buffer is determined
+		by NSH_FILEIOSIZE.  An appropriate location for the
+		implementation of platform_challenge would be within apps/platform/<board>.
 
-                One newline will be inserted after the platform-supplied message.
+		One newline will be inserted after the platform-supplied message.
 
-                platform_challenge() is prototyped and described in apps/include/nshlib/nshlib.h
-                which may be included like:
+		platform_challenge() is prototyped and described in apps/include/nshlib/nshlib.h
+		which may be included like:
 
-                        #include "nshlib/nshlib.h"
+			#include "nshlib/nshlib.h"
 
 config NSH_PLATFORM_SKIP_LOGIN
-        bool "Platform skip login"
-        default n
-        ---help---
-                If this option is selected, the NSH will call into platform-specific
-                logic in order to skip login.  The function prototype for this
-                call is:
+	bool "Platform skip login"
+	default n
+	---help---
+		If this option is selected, the NSH will call into platform-specific
+		logic in order to skip login.  The function prototype for this
+		call is:
 
-                        int platform_skip_login(void);
+			int platform_skip_login(void);
 
 endif # NSH_LOGIN
 endif # NSH_LIBRARY

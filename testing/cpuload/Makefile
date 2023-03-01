@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/usrsock_rpmsg/Makefile
+# apps/testing/cpuload/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,15 +20,11 @@
 
 include $(APPDIR)/Make.defs
 
-PROGNAME = usrsock
-PRIORITY = CONFIG_NETUTILS_USRSOCK_RPMSG_PRIORITY
-STACKSIZE = CONFIG_NETUTILS_USRSOCK_RPMSG_STACKSIZE
+PROGNAME  = cpuload
+PRIORITY  = 100
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_CPULOAD)
 
-ifeq ($(CONFIG_NET_USRSOCK),y)
-MAINSRC := usrsock_rpmsg_client.c
-else
-MAINSRC := usrsock_rpmsg_server.c
-endif
-MODULE = $(CONFIG_NETUTILS_USRSOCK_RPMSG)
+MAINSRC = cpuload_main.c
 
 include $(APPDIR)/Application.mk

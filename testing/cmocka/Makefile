@@ -22,6 +22,8 @@ include $(APPDIR)/Make.defs
 
 CSRCS += $(wildcard cmocka/src/*.c)
 CFLAGS += -Dprint_error=nx_print_error
+CFLAGS += -DCMOCKA_PLATFORM_INCLUDE
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/testing/cmocka
 
 PROGNAME  = $(CONFIG_TESTING_CMOCKA_PROGNAME)
 PRIORITY  = $(CONFIG_TESTING_CMOCKA_PRIORITY)
@@ -34,9 +36,11 @@ MAINSRC = $(CURDIR)/cmocka_main.c
 ifeq ($(wildcard cmocka/.git),)
 VERSION ?= 1.1.5
 cmocka.zip:
-	$(Q) curl -L https://github.com/clibs/cmocka/archive/cmocka-$(VERSION).zip -o cmocka.zip
+	$(Q) curl -L https://github.com/clibs/cmocka/archive/$(VERSION).zip -o cmocka.zip
 	$(Q) unzip -o cmocka.zip
-	$(Q) mv cmocka-cmocka-$(VERSION) cmocka
+	$(Q) mv cmocka-$(VERSION) cmocka
+	$(Q) patch -p0 < 0001-cmocka.c-Reduce-the-call-stack-consumption-of-printf.patch
+	$(Q) patch -p0 < 0002-cmocka-feature-to-forwarding-cmocka-log-message-to-c.patch
 
 context:: cmocka.zip
 

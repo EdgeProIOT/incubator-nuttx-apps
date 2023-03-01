@@ -114,7 +114,7 @@ $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
-	$(call COMPILE, -fno-lto -fno-builtin $<, $@)
+	$(call COMPILE, $<, $@, -fno-lto -fno-builtin)
 
 $(BIN): $(SYMTABOBJ)
 	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $^)
@@ -158,7 +158,10 @@ dirlinks:
 context_all: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 register_all: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_register)
 
-context:
+staging:
+	$(Q) mkdir -p $@
+
+context: | staging
 	$(Q) $(MAKE) context_all
 	$(Q) $(MAKE) register_all
 
@@ -202,20 +205,6 @@ clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
-ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-	$(Q) ( if exist  external \
-		echo "********************************************************" \
-		echo "* The external directory/link must be removed manually *" \
-		echo "********************************************************" \
-	)
-else
-	$(Q) (if [ -e external ]; then \
-		echo "********************************************************"; \
-		echo "* The external directory/link must be removed manually *"; \
-		echo "********************************************************"; \
-		fi; \
-	)
-endif
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))

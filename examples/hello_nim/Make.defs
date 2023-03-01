@@ -1,5 +1,5 @@
 ############################################################################
-# apps/netutils/usrsock_rpmsg/Make.defs
+# apps/examples/hello_nim/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_NETUTILS_USRSOCK_RPMSG),)
-CONFIGURED_APPS += $(APPDIR)/netutils/usrsock_rpmsg
+ifneq ($(CONFIG_EXAMPLES_HELLO_NIM),)
+CONFIGURED_APPS += $(APPDIR)/examples/hello_nim
 endif

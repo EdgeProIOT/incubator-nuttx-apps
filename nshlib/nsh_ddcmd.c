@@ -24,6 +24,8 @@
 
 #include <nuttx/config.h>
 
+#include <nuttx/clock.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -188,8 +190,11 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
                      FAR struct dd_s *dd)
 {
   FAR uint8_t *buffer;
-  int sector = 0;
+  unsigned sector = 0;
   int ret = OK;
+
+  UNUSED(infile);
+  UNUSED(outfile);
 
   ret = lseek(dd->infd, dd->skip ? dd->skip * dd->sectsize : 0, SEEK_SET);
   if (ret < 0)
