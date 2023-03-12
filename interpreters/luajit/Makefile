@@ -22,10 +22,10 @@ include $(APPDIR)/Make.defs
 
 LUAJIT_PATCHS ?= $(sort $(wildcard 000*.patch))
 
-LUAJIT_VERSION  = 2.1.0-beta3-2
+LUAJIT_VERSION  = $(patsubst "%",%,$(CONFIG_LUAJIT_VERSION))
 LUAJIT_UNPACK   = LuaJIT
-LUAJIT_TARBALL  = v$(LUAJIT_VERSION).tar.gz
-LUAJIT_URL_BASE = https://github.com/jturnsek/LuaJIT/archive
+LUAJIT_TARBALL  = $(LUAJIT_VERSION).tar.gz
+LUAJIT_URL_BASE = https://github.com/LuaJIT/LuaJIT/archive
 LUAJIT_URL      = $(LUAJIT_URL_BASE)/$(LUAJIT_TARBALL)
 
 MAINSRC = luajit.c

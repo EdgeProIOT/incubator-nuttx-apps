@@ -9,6 +9,10 @@ config INTERPRETERS_LUAJIT
 
 if INTERPRETERS_LUAJIT
 
+config LUAJIT_VERSION
+	string "LuaJIT version"
+	default "505e2c03de35e2718eef0d2d3660712e06dadf1f"
+
 config INTERPRETERS_LUAJIT_PRIORITY
 	int "LuaJIT REPL priority"
 	default 100
@@ -16,5 +20,21 @@ config INTERPRETERS_LUAJIT_PRIORITY
 config INTERPRETERS_LUAJIT_STACKSIZE
 	int "LuaJIT REPL stack size"
 	default 16384
+
+config LUAJIT_ALLOC_START
+	hex "Alloc start"
+	default 0x20200000
+
+config LUAJIT_ALLOC_SIZE
+	hex "Alloc size"
+	default 0xA0000
+
+config LUAJIT_MCODE_START
+	hex "MCode start"
+	default 0x00000000
+
+config LUAJIT_MCODE_SIZE
+	hex "MCode size"
+	default 0x20000
 
 endif
