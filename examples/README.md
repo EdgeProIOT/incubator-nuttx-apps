@@ -60,7 +60,7 @@ Example Configuration:
 - `CONFIG_EXAMPLES_AJOYSTICK_DEVNAME` – Joystick device name. Default
   `/dev/adjoy0`.
 - `CONFIG_EXAMPLES_AJOYSTICK_SIGNO` – Signal used to signal the test
-  application. Default `13`.
+  application. Default `32`.
 
 ## `alarm` RTC Alarm
 
@@ -278,7 +278,7 @@ Example Configuration:
 - `CONFIG_EXAMPLES_DJOYSTICK_DEVNAME` – Joystick device name. Default
   `/dev/djoy0`.
 - `CONFIG_EXAMPLES_DJOYSTICK_SIGNO` – Signal used to signal the test
-  application. Default `13`.
+  application. Default `32`.
 
 ## `elf` ELF loader
 
@@ -642,6 +642,21 @@ maintaining duplicate logic in the NuttX repository.
 This is a simple test of the board LED driver at
 `nuttx/drivers/leds/userled_*.c`.
 
+## `libtest` Static Library Test
+
+This example illustrates how you may create a static library. It does the following:
+
+It creates a static library called libtest.a that contains an object that provides the symbol library_test().
+
+At adds the library as an EXTRA_LIB in the build
+
+EXTRA_LIBS += -ltest
+E XTRA_LIBPATHS += -L$(APPDIR)/examples/libtest
+
+And optionally, it can be configured to:
+
+Generate a built-in command that can be executed by NSH. This command logic links with the symbol library_test() that will provided by the libtest.a static library.
+
 ## `luamod_hello` Hello World Lua module
 
 A Lua C module showing how to add built-in modules to the Lua interpreter.
@@ -940,8 +955,6 @@ This directory contains a simple test of a subset of the NX APIs defined in
 - `CONFIG_EXAMPLES_NX_SERVERPRIO` – The server priority. Default: `120`
 - `CONFIG_EXAMPLES_NX_LISTENERPRIO` – The priority of the event listener thread.
   Default `80`.
-- `CONFIG_EXAMPLES_NX_NOTIFYSIGNO` – The signal number to use with
-  `nx_eventnotify()`. Default: `4`.
 
 The example also has the following settings and will generate an error if they
 are not as expected:
@@ -998,8 +1011,6 @@ The following configuration options can be selected to customize the test:
 - `CONFIG_EXAMPLES_NXTERM_SERVERPRIO` – The server priority. Default: `120`.
 - `CONFIG_EXAMPLES_NXTERM_LISTENERPRIO` – The priority of the event listener
   thread. Default: `80`.
-- `CONFIG_EXAMPLES_NXTERM_NOTIFYSIGNO` – The signal number to use with
-  `nx_eventnotify()`. Default: `4`.
 
 ## `nxflat` NXFLAT Binary
 
@@ -1143,7 +1154,7 @@ The following configuration options can be selected:
 - `CONFIG_EXAMPLES_NXTEXT_LISTENERPRIO` – The priority of the event listener
   thread. Default: `80`.
 - `CONFIG_EXAMPLES_NXTEXT_NOTIFYSIGNO` – The signal number to use with
-  `nx_eventnotify()`. Default: `4`.
+  `nx_eventnotify()`. Default: `32`.
 
 The example also expects the following settings and will generate an error if
 they are not as expected:
@@ -1766,7 +1777,7 @@ Example configuration:
   Default: `1000000`.
 - `EXAMPLES_TIMER_GPIO_SIGNO` – This is the signal number that is used to
     notify that a timer interrupt occurred.
-  Default: `17`.
+  Default: `32`.
 - `EXAMPLES_TIMER_GPIO_STACKSIZE` – This is the stack size allocated when the
     timer task runs.
   Default: `2048`.

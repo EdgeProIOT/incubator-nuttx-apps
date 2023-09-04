@@ -20,13 +20,4 @@
 
 ifneq ($(CONFIG_INTERPRETERS_LUAJIT),)
 CONFIGURED_APPS += $(APPDIR)/interpreters/luajit
-
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/interpreters/luajit/LuaJIT/src}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/interpreters/luajit/LuaJIT/src}
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/interpreters/luajit/LuaJIT/src/host}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/interpreters/luajit/LuaJIT/src/host}
 endif

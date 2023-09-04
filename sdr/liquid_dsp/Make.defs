@@ -22,8 +22,6 @@
 ifneq ($(CONFIG_SDR_LIQUID_DSP),)
 CONFIGURED_APPS += $(APPDIR)/sdr/liquid_dsp
 
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/sdr/liquid_dsp/liquid-dsp/src}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/sdr/liquid_dsp/liquid-dsp/src}
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/sdr/liquid_dsp/liquid-dsp/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/sdr/liquid_dsp/liquid-dsp/include
 endif

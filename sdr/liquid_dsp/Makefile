@@ -34,17 +34,12 @@ $(LIQUID_DSP_UNPACK): $(LIQUID_DSP_TARBALL)
 	$(Q) echo "Unpacking $(LIQUID_DSP_TARBALL) to $(LIQUID_DSP_UNPACK)"
 	$(Q) tar xzvf $(LIQUID_DSP_TARBALL)
 	$(Q) mv liquid-dsp-$(LIQUID_DSP_VERSION) $(LIQUID_DSP_UNPACK)
-	$(Q) cp config.h $(LIQUID_DSP_UNPACK)/include
 
 $(LIQUID_DSP_UNPACK)/.patch: $(LIQUID_DSP_UNPACK)
 	$(Q) touch $(LIQUID_DSP_UNPACK)/.patch
 
-VPATH += $(LIBUV_UNPACK)/include
-
-DEPPATH += --dep-path $(LIBUV_UNPACK)/include
-
-CFLAGS += -I$(LIQUID_DSP_UNPACK)/include
-CFLAGS += -Wall -std=c99
+CFLAGS += -std=c99
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/sdr/liquid_dsp
 CFLAGS += -DM_SQRT1_2=0.7071067811865475244008443621048490
 CFLAGS += -DM_SQRT2=1.4142135623730950488016887242096981
 CFLAGS += -DM_PI=3.1415926535897932384626433832795029
@@ -238,10 +233,12 @@ CSRCS += $(LIQUID_DSP_UNPACK)/src/vector/src/vectorcf_trig.port.c
 
 CSRCS += $(LIQUID_DSP_UNPACK)/src/libliquid.c
 
+ifeq ($(wildcard $(LIQUID_DSP_UNPACK)/.git),)
 context:: $(LIQUID_DSP_UNPACK)/.patch
 
 distclean::
 	$(call DELDIR, $(LIQUID_DSP_UNPACK))
 	$(call DELFILE, $(LIQUID_DSP_TARBALL))
+endif
 
 include $(APPDIR)/Application.mk

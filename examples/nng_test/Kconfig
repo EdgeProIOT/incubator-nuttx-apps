@@ -4,7 +4,7 @@
 #
 
 config EXAMPLES_NNG_TEST
-	tristate "NNG pubsub program"
+	bool "NNG pubsub program"
 	default n
 	---help---
 		Enable the NNG pubsub program

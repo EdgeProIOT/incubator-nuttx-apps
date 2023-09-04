@@ -21,9 +21,7 @@
 ifneq ($(CONFIG_NETUTILS_NNG),)
 CONFIGURED_APPS += $(APPDIR)/netutils/nng
 
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-	$(APPDIR)/netutils/nng/nng/include}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
-    $(APPDIR)/netutils/nng/nng/include}
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/netutils/nng/nng/include
+CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/netutils/nng/nng/include
 
 endif

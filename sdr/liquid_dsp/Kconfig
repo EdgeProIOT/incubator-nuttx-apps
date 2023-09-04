@@ -4,7 +4,7 @@
 #
 
 config SDR_LIQUID_DSP
-  tristate "Liquid DSP Library"
-  default n
-  ---help---
-    Enable the Liquid DSP Library - https://liquidsdr.org
+	bool "Liquid DSP Library"
+	default n
+	---help---
+		Enable the Liquid DSP Library - https://liquidsdr.org

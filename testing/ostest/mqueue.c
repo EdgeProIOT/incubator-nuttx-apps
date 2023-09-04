@@ -24,15 +24,16 @@
 
 #include <nuttx/config.h>
 
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+#include <assert.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <mqueue.h>
-#include <sched.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <mqueue.h>
+#include <pthread.h>
+#include <sched.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "ostest.h"
 
@@ -48,7 +49,7 @@
 #else
   /* Message length is the size of the message plus the null terminator */
 
-#  define TEST_MSGLEN       (strlen(TEST_MESSAGE)+1)
+#  define TEST_MSGLEN       sizeof(TEST_MESSAGE)
 #endif
 
 #define TEST_SEND_NMSGS     (10)
