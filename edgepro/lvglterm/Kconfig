@@ -1,0 +1,23 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menuconfig EDGEPRO_LVGLTERM
+	tristate "LVGL Terminal"
+	default n
+	depends on GRAPHICS_LVGL
+	---help---
+		Enable LVGL Terminal
+
+if EDGEPRO_LVGLTERM
+
+config EDGEPRO_LVGLTERM_PRIORITY
+	int "lvglterm task priority"
+	default 100
+
+config EDGEPRO_LVGLTERM_STACKSIZE
+	int "lvglterm stack size"
+	default 16384
+
+endif # EDEGPRO_LVGLTERM
