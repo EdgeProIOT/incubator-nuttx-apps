@@ -122,7 +122,7 @@ if(CONFIG_TESTING_OSTEST)
     endif()
   endif()
 
-  if(CONFIG_ARCH_HAVE_VFORK)
+  if(CONFIG_ARCH_HAVE_FORK)
     if(CONFIG_SCHED_WAITPID)
       list(APPEND SRCS vfork.c)
     endif()
@@ -130,6 +130,10 @@ if(CONFIG_TESTING_OSTEST)
 
   if(CONFIG_ARCH_SETJMP_H)
     list(APPEND SRCS setjmp.c)
+  endif()
+
+  if(CONFIG_SMP_CALL)
+    list(APPEND SRCS smp_call.c)
   endif()
 
   target_sources(apps PRIVATE ${SRCS})

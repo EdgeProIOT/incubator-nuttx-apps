@@ -256,13 +256,19 @@ void sched_lock_test(void);
 
 /* vfork.c ******************************************************************/
 
-#if defined(CONFIG_ARCH_HAVE_VFORK) && defined(CONFIG_SCHED_WAITPID)
+#if defined(CONFIG_ARCH_HAVE_FORK) && defined(CONFIG_SCHED_WAITPID)
 int vfork_test(void);
 #endif
 
 /* setjmp.c *****************************************************************/
 
 void setjmp_test(void);
+
+/* smp_call.c ***************************************************************/
+
+#ifdef CONFIG_SMP_CALL
+void smp_call_test(void);
+#endif
 
 /* APIs exported (conditionally) by the OS specifically for testing of
  * priority inheritance

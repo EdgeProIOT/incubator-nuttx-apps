@@ -580,9 +580,14 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
-#if defined(CONFIG_ARCH_HAVE_VFORK) && defined(CONFIG_SCHED_WAITPID)
+#if defined(CONFIG_ARCH_HAVE_FORK) && defined(CONFIG_SCHED_WAITPID)
       printf("\nuser_main: vfork() test\n");
       vfork_test();
+#endif
+
+#ifdef CONFIG_SMP_CALL
+      printf("\nuser_main: smp call test\n");
+      smp_call_test();
 #endif
 
       /* Compare memory usage at time ostest_main started until

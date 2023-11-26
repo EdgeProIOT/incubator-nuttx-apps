@@ -95,9 +95,6 @@ endif
 
 ifneq ($(strip $(PROGNAME)),)
   PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
-  ifneq ($(words $(PROGOBJ)), $(words $(PROGNAME)))
-    $(warning "program names $(PROGNAME) does not match mainsrcs $(PROGOBJ)")
-  endif
   PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGNAME))
   REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 
@@ -142,7 +139,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 	@:
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
@@ -208,11 +205,25 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-archive:
-	$(call SPLITVARIABLE,ALL_OBJS,$(OBJS),100)
+AROBJS :=
+ifneq ($(OBJS),)
+SORTOBJS := $(sort $(OBJS))
+$(eval $(call SPLITVARIABLE,OBJS_SPILT,$(SORTOBJS),100))
+$(foreach BATCH, $(OBJS_SPILT_TOTAL), \
+	$(foreach obj, $(OBJS_SPILT_$(BATCH)), \
+		$(eval substitute := $(patsubst %$(OBJEXT),%_$(BATCH)$(OBJEXT),$(obj))) \
+		$(eval AROBJS += $(substitute)) \
+		$(eval $(call AROBJSRULES, $(substitute),$(obj))) \
+	) \
+)
+endif
+
+.built: $(AROBJS)
+	$(call SPLITVARIABLE,ALL_OBJS,$(AROBJS),100)
 	$(foreach BATCH, $(ALL_OBJS_TOTAL), \
-		$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(ALL_OBJS_$(BATCH))) \
+		$(shell $(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $(ALL_OBJS_$(BATCH)))) \
 	)
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -288,15 +299,16 @@ endif
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
-	) 
+	)
 	$(Q) touch $@
 
 depend:: .depend
 	@:
 
 clean::
+	$(call DELFILE, .built)
+	$(call CLEANAROBJS)
 	$(call CLEAN)
-
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)

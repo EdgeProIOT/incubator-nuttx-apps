@@ -88,11 +88,6 @@ PROGNAME += cmocka_driver_i2c_spi
 endif
 endif
 
-ifneq ($(CONFIG_BCH),)
-PROGNAME += cmocka_driver_block
-MAINSRC  += drivertest_block.c
-endif
-
 ifneq ($(CONFIG_DEV_GPIO),)
 PROGNAME += cmocka_driver_gpio
 MAINSRC  += drivertest_gpio.c
@@ -131,6 +126,11 @@ endif
 ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
 MAINSRC  += drivertest_touchpanel.c
 PROGNAME += cmocka_driver_touchpanel
+endif
+
+ifneq ($(CONFIG_PM_RUNTIME),)
+MAINSRC  += drivertest_pm_runtime.c
+PROGNAME += cmocka_driver_pm_runtime
 endif
 
 include $(APPDIR)/Application.mk

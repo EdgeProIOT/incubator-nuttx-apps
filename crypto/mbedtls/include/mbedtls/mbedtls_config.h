@@ -367,8 +367,11 @@
  * #define MBEDTLS_NIST_KW_ALT
  * #define MBEDTLS_MD2_ALT
  * #define MBEDTLS_MD4_ALT
- * #define MBEDTLS_MD5_ALT
- * #define MBEDTLS_POLY1305_ALT
+ */
+#ifdef CONFIG_MBEDTLS_MD5_ALT
+#define MBEDTLS_MD5_ALT
+#endif
+/* #define MBEDTLS_POLY1305_ALT
  * #define MBEDTLS_RIPEMD160_ALT
  * #define MBEDTLS_RSA_ALT
  */
@@ -975,6 +978,21 @@
  */
 #ifdef CONFIG_MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
+#endif
+
+/**
+ * \def MBEDTLS_X509_CRT_POOL
+ *
+ * Enable X.509 certificate pool.
+ *
+ * Module:  library/x509_crt_pool.c
+ *
+ * Requires: MBEDTLS_THREADING_C
+ *
+ * This module is required for X.509 certificate pool.
+ */
+#ifdef CONFIG_MBEDTLS_X509_CRT_POOL
+#define MBEDTLS_X509_CRT_POOL
 #endif
 
 /**
@@ -1587,7 +1605,7 @@
  * Requires: MBEDTLS_SSL_DTLS_CONNECTION_ID
  */
 #ifdef CONFIG_MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT
-#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT  0
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT  CONFIG_MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT
 #endif
 
 /**
@@ -2964,7 +2982,7 @@
  * \def MBEDTLS_LMS_PRIVATE
  *
  * Enable LMS private-key operations and signing code. Functions enabled by
- *this
+ * this
  * option are experimental, and should not be used in production.
  *
  * Requires: MBEDTLS_LMS_C

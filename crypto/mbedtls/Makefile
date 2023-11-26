@@ -38,7 +38,18 @@ MBEDTLS_UNPACKPROGDIR = $(MBEDTLS_UNPACKNAME)$(DELIM)programs
 # This lets Mbed TLS better use some of the POSIX features we have
 CFLAGS += ${DEFINE_PREFIX}__unix__
 
-library/bignum.c_CFLAGS += -fno-lto
+mbedtls/library/bignum.c_CFLAGS += -fno-lto
+
+# Build break on Assemble compiler if -fno-omit-frame-pointer and -O3 enabled at same time
+# {standard input}: Assembler messages:
+# {standard input}:2560: Error: branch out of range
+# make[2]: *** [apps/Application.mk:170: mbedtls/library/sha256.o] Error 1
+
+ifeq ($(CONFIG_FRAME_POINTER),y)
+  ifeq ($(CONFIG_DEBUG_OPTLEVEL),"-O3")
+    mbedtls/library/sha256.c_CFLAGS += -O2
+  endif
+endif
 
 ifeq ($(CONFIG_ARCH_SIM),y)
   CFLAGS += -O0
@@ -54,6 +65,8 @@ $(MBEDTLS_UNPACKNAME): $(MBEDTLS_ZIP)
 	@echo "Unpacking: $(MBEDTLS_ZIP) -> $(MBEDTLS_UNPACKNAME)"
 	$(Q) $(UNPACK) $(MBEDTLS_ZIP)
 	$(Q) mv	mbedtls-$(MBEDTLS_VERSION) $(MBEDTLS_UNPACKNAME)
+	$(Q) patch -p1 -d $(MBEDTLS_UNPACKNAME) < 0001-mbedtls-entropy_poll-use-getrandom-to-get-the-system.patch
+	$(Q) patch -p1 -d $(MBEDTLS_UNPACKNAME) < 0002-mbedtls-add-mbedtls-x509-crt-pool.patch
 	$(Q) touch $(MBEDTLS_UNPACKNAME)
 
 # Download and unpack tarball if no git repo found
@@ -103,6 +116,10 @@ CSRCS += $(APPDIR)/crypto/mbedtls/source/dev_alt.c
 
 ifeq ($(CONFIG_MBEDTLS_AES_ALT),y)
 CSRCS += $(APPDIR)/crypto/mbedtls/source/aes_alt.c
+endif
+
+ifeq ($(CONFIG_MBEDTLS_MD5_ALT),y)
+CSRCS += $(APPDIR)/crypto/mbedtls/source/md5_alt.c
 endif
 
 ifeq ($(CONFIG_MBEDTLS_SHA1_ALT),y)

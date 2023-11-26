@@ -222,7 +222,7 @@ MAINWORDS += "main("
 
 LTP_ORIGS := $(shell find $(TESTDIR) -name *.c)
 ifneq ($(LTP_ORIGS),)
-$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
+$(eval $(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200))
 $(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
 	$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
 )
@@ -232,7 +232,7 @@ $(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS))))
 
 LTP_ORIGS := $(filter-out $(BLACKLIST), $(LTP_ORIGS))
 ifneq ($(LTP_ORIGS),)
-$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
+$(eval $(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200))
 $(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
 	$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
 )
@@ -240,13 +240,19 @@ endif
 
 LTP_CSRCS := $(filter-out $(LTP_MAINCSRCS), $(LTP_ORIGS))
 ifneq ($(LTP_MAINCSRCS),)
-$(call SPLITVARIABLE,MAINCSRC_SPILT,$(LTP_MAINCSRCS),50)
+$(eval $(call SPLITVARIABLE,MAINCSRC_SPILT,$(LTP_MAINCSRCS),50))
 $(foreach BATCH, $(MAINCSRC_SPILT_TOTAL), \
 	$(eval PROGNAME+=$(basename $(shell echo $(MAINCSRC_SPILT_$(BATCH)) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))) \
 )
 endif
 
 MAINSRC       = $(LTP_MAINCSRCS)
+ifneq ($(CONFIG_NET_CAN),)
+PROGNAME     += can_rcv_own_msgs
+PROGNAME     += can_filter
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_filter.c
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_rcv_own_msgs.c
+endif
 PRIORITY      = SCHED_PRIORITY_DEFAULT
 STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
@@ -254,6 +260,7 @@ MODULE        = $(CONFIG_TESTING_LTP)
 CSRCS        := $(LTP_CSRCS)
 CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
+CFLAGS       += -I$(TESTDIR)/../../include
 endif
 
 # Relax warning checks to avoid expected compile errors:
@@ -263,12 +270,18 @@ CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable
 # Should be removed if possible in the future
 CFLAGS += -Wno-incompatible-pointer-types -Wno-overflow -Wno-int-to-pointer-cast
 
+# Specific compilation errors ignored in MacOS platform
+ifneq ($(CONFIG_HOST_MACOS),)
+CFLAGS += -Wno-integer-overflow -Wno-absolute-value
+endif
+
 ltp-$(LTPS_VERSION).zip:
 	$(call DOWNLOAD,$(LTP_DOWNLOAD_URL),$(LTPS_VERSION).zip, ltp.zip)
 
 $(LTP_UNPACK): ltp-$(LTPS_VERSION).zip
 	$(Q) echo "dowload $(LTP_DOWNLOAD_URL)$(LTPS_VERSION).zip"
 	$(Q) unzip -o ltp.zip
+	$(Q) rm -f ltp.zip
 	$(Q) mv ltp-$(LTPS_VERSION) $(LTP_UNPACK)
 	$(Q) patch -d $(LTP_UNPACK) -p1 < 0001-pthread_rwlock_unlock-follow-linux.patch
 	$(Q) patch -d $(LTP_UNPACK) -p1 < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
