@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/benchmarks/spinlock_bench/spinlock_bench.c
+ * apps/examples/rmtchar/rmtchar_common.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,89 +22,70 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
+
+#include <sys/types.h>
 #include <stdio.h>
-#include <assert.h>
+#include <fcntl.h>
+#include <pthread.h>
 #include <errno.h>
-#include <nuttx/spinlock.h>
-#include <time.h>
+#include <debug.h>
+#include <unistd.h>
+
+#include "rmtchar.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define TEST_NUM CONFIG_SPINLOCK_MULTITHREAD
-#define THREAD_NUM CONFIG_SPINLOCK_MULTITHREAD
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-struct thread_parmeter_s
-{
-  FAR int *result;
-  FAR spinlock_t *lock;
-};
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static FAR void *thread_spinlock(FAR void *parameter)
-{
-  FAR int *result = ((FAR struct thread_parmeter_s *)parameter)->result;
-  FAR spinlock_t *lock = ((FAR struct thread_parmeter_s *)parameter)->lock;
-
-  int i;
-
-  for (i = 0; i < TEST_NUM; i++)
-    {
-      spin_lock(lock);
-      (*result)++;
-      spin_unlock(lock);
-    }
-
-  return NULL;
-}
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-void main(void)
-{
-  spinlock_t lock = SP_UNLOCKED;
-  int result = 0;
-  pthread_t thread[THREAD_NUM];
-  struct thread_parmeter_s para;
-  clock_t start;
-  clock_t end;
+/****************************************************************************
+ * Name: print_items
+ *
+ * Description:
+ *   This function prints the level and duration of RMT items stored in a
+ *   buffer. It iterates over the buffer, printing the level and duration of
+ *   each item in a formatted manner.
+ *
+ * Input Parameters:
+ *   buf  - Pointer to the buffer containing the RMT items.
+ *   len  - The number of RMT items in the buffer.
+ *
+ * Returned Value:
+ *   None.
+ *
+ ****************************************************************************/
 
-  int status;
+void print_items(struct rmt_item32_s *buf, int len)
+{
   int i;
 
-  para.result = &result;
-  para.lock = &lock;
-
-  start = perf_gettime();
-  for (i = 0; i < THREAD_NUM; ++i)
+  for (i = 0; i < len; i++, buf++)
     {
-      status = pthread_create(&thread[i], NULL,
-                              thread_spinlock, &para);
-      if (status != 0)
-        {
-          printf("spinlock_test: ERROR pthread_create failed, status=%d\n",
-                 status);
-          ASSERT(false);
-        }
+      printf("\t[%d]:\tL %d\tD %d\t", i, buf->level0, buf->duration0);
+      printf("L %d\t D %d\n", buf->level1, buf->duration1);
     }
-
-  for (i = 0; i < THREAD_NUM; ++i)
-    {
-      pthread_join(thread[i], NULL);
-    }
-
-  end = perf_gettime();
-  assert(result == THREAD_NUM * TEST_NUM);
-
-  printf("total_time: %lu\n", end - start);
 }

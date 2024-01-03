@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/hello_nim/Makefile
+# apps/testing/open_memstream/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,31 +20,13 @@
 
 include $(APPDIR)/Make.defs
 
-# Hello, World! (Nim) built-in application info
+# SMART filesystem test tool
 
-PROGNAME  = $(CONFIG_EXAMPLES_HELLO_NIM_PROGNAME)
-PRIORITY  = $(CONFIG_EXAMPLES_HELLO_NIM_PRIORITY)
-STACKSIZE = $(CONFIG_EXAMPLES_HELLO_NIM_STACKSIZE)
-MODULE    = $(CONFIG_EXAMPLES_HELLO_NIM)
+PROGNAME = open_memstream_test
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 4096
+MODULE = $(CONFIG_TESTING_FMEMOPEN_TEST)
 
-# Hello, World! Example
-
-NIMPATH = $(shell choosenim show path)
-CFLAGS += -I $(NIMPATH)/lib -I ../../.nimcache
-CSRCS += $(wildcard ../../.nimcache/*.c)
-
-MAINSRC = hello_nim_main.c
-
-.nimc: hello_nim_async.nim
-	nim c --header $<
-	touch .nimc
-
-$(MAINSRC): .nimc
-
-clean::
-	$(call DELDIR, .nimcache)
-	$(call DELFILE, .nimc)
-
-all:: .nimc $(MAINSRC)
+MAINSRC = open_memstream.c
 
 include $(APPDIR)/Application.mk
