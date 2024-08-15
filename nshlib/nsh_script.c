@@ -39,7 +39,7 @@
  * Private Functions
  ****************************************************************************/
 
-#if defined(CONFIG_NSH_ROMFSETC) || defined(CONFIG_NSH_ROMFSRC)
+#if defined(CONFIG_ETC_ROMFS) || defined(CONFIG_NSH_ROMFSRC)
 static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
                                FAR const char *cmd,
                                FAR const char *path,
@@ -54,7 +54,7 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
       fd = open(CONFIG_NSH_SCRIPT_REDIRECT_PATH, 0666);
       if (fd > 0)
         {
-          nsh_redirect(vtbl, fd, save);
+          nsh_redirect(vtbl, 0, fd, save);
         }
     }
 
@@ -202,7 +202,7 @@ int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
  *
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_ROMFSETC
+#ifdef CONFIG_ETC_ROMFS
 int nsh_sysinitscript(FAR struct nsh_vtbl_s *vtbl)
 {
   /* Since most existing systems only use the NSH_INITPATH script file.
@@ -224,7 +224,7 @@ int nsh_sysinitscript(FAR struct nsh_vtbl_s *vtbl)
  *
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_ROMFSETC
+#ifdef CONFIG_ETC_ROMFS
 int nsh_initscript(FAR struct nsh_vtbl_s *vtbl)
 {
   static bool initialized;
@@ -268,6 +268,6 @@ int nsh_loginscript(FAR struct nsh_vtbl_s *vtbl)
   return nsh_script_redirect(vtbl, "login", NSH_RCPATH, true);
 }
 #endif
-#endif /* CONFIG_NSH_ROMFSETC */
+#endif /* CONFIG_ETC_ROMFS */
 
 #endif /* CONFIG_NSH_DISABLESCRIPT */

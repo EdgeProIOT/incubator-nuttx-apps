@@ -48,6 +48,7 @@
 #include <unistd.h>
 
 #include <nuttx/net/mii.h>
+#include <sys/boardctl.h>
 
 #include "netutils/netlib.h"
 #if defined(CONFIG_NETUTILS_DHCPC) || defined(CONFIG_NETINIT_DNS)
@@ -289,7 +290,9 @@ static const uint16_t g_ipv6_netmask[8] =
     defined(HAVE_MAC)
 static void netinit_set_macaddr(void)
 {
-#if defined(CONFIG_NET_ETHERNET)
+#if defined(CONFIG_NETINIT_UIDMAC)
+  uint8_t uid[CONFIG_BOARDCTL_UNIQUEID_SIZE];
+#elif defined(CONFIG_NET_ETHERNET)
   uint8_t mac[IFHWADDRLEN];
 #elif defined(HAVE_EADDR)
   uint8_t eaddr[8];
@@ -297,7 +300,12 @@ static void netinit_set_macaddr(void)
 
   /* Many embedded network interfaces must have a software assigned MAC */
 
-#if defined(CONFIG_NET_ETHERNET)
+#if defined(CONFIG_NETINIT_UIDMAC)
+  boardctl(BOARDIOC_UNIQUEID, (uintptr_t)&uid);
+  uid[0] = (uid[0] & 0b11110000) | 2; /* Locally Administered MAC */
+  netlib_setmacaddr(NET_DEVNAME, uid);
+
+#elif defined(CONFIG_NET_ETHERNET)
   /* Use the configured, fixed MAC address */
 
   mac[0] = (CONFIG_NETINIT_MACADDR_2 >> (8 * 1)) & 0xff;
@@ -334,6 +342,30 @@ static void netinit_set_macaddr(void)
 #  define netinit_set_macaddr()
 #endif
 
+#if defined(CONFIG_NETINIT_THREAD) && CONFIG_NETINIT_RETRY_MOUNTPATH > 0
+static inline void netinit_checkpath(void)
+{
+  int retries = CONFIG_NETINIT_RETRY_MOUNTPATH;
+  while (retries > 0)
+    {
+      DIR * dir = opendir(CONFIG_IPCFG_PATH);
+      if (dir)
+        {
+          /* Directory exists. */
+
+          closedir(dir);
+          break;
+        }
+      else
+        {
+        usleep(100000);
+        }
+
+      retries--;
+    }
+}
+#endif
+
 /****************************************************************************
  * Name: netinit_set_ipv4addrs
  *
@@ -354,6 +386,10 @@ static inline void netinit_set_ipv4addrs(void)
   /* Attempt to obtain IPv4 address configuration from the IP configuration
    * file.
    */
+
+#if defined(CONFIG_NETINIT_THREAD) && CONFIG_NETINIT_RETRY_MOUNTPATH > 0
+  netinit_checkpath();
+#endif
 
   ret = ipcfg_read(NET_DEVNAME, (FAR struct ipcfg_s *)&ipv4cfg, AF_INET);
 #ifdef CONFIG_NETUTILS_DHCPC
@@ -512,6 +548,10 @@ static inline void netinit_set_ipv6addrs(void)
    * file.
    */
 
+#if defined(CONFIG_NETINIT_THREAD) && CONFIG_NETINIT_RETRY_MOUNTPATH > 0
+  netinit_checkpath();
+#endif
+
   ret = ipcfg_read(NET_DEVNAME, (FAR struct ipcfg_s *)&ipv6cfg, AF_INET6);
   if (ret >= 0 && IPCFG_HAVE_STATIC(ipv6cfg.proto))
     {
@@ -649,10 +689,12 @@ static void netinit_net_bringup(void)
               netlib_set_dripv4addr(NET_DEVNAME, &ds.default_router);
             }
 
+#  ifdef CONFIG_NETINIT_DNS
           if (ds.dnsaddr.s_addr != 0)
             {
               netlib_set_ipv4dnsaddr(&ds.dnsaddr);
             }
+#  endif
         }
 
       dhcpc_close(handle);

@@ -76,25 +76,28 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
+DOBJS = $(DSRCS:=$(SUFFIX)$(OBJEXT))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
 MAINRUSTSRCS = $(filter %$(RUSTEXT),$(MAINSRC))
 MAINZIGSRCS = $(filter %$(ZIGEXT),$(MAINSRC))
+MAINDSRCS = $(filter %$(DEXT),$(MAINSRC))
 MAINCXXOBJ = $(MAINCXXSRCS:=$(SUFFIX)$(OBJEXT))
 MAINCOBJ = $(MAINCSRCS:=$(SUFFIX)$(OBJEXT))
 MAINRUSTOBJ = $(MAINRUSTSRCS:=$(SUFFIX)$(OBJEXT))
 MAINZIGOBJ = $(MAINZIGSRCS:=$(SUFFIX)$(OBJEXT))
+MAINDOBJ = $(MAINDSRCS:=$(SUFFIX)$(OBJEXT))
 
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
-OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS) $(EXTOBJS)
+OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS) $(DOBJS) $(EXTOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ) $(MAINDOBJ)
 endif
 
 ifneq ($(strip $(PROGNAME)),)
-  PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+  PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ) $(MAINDOBJ)
   PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGNAME))
   REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 
@@ -131,6 +134,7 @@ endif
 
 ZIGELFFLAGS ?= $(ZIGFLAGS)
 RUSTELFFLAGS ?= $(RUSTFLAGS)
+DELFFLAGS ?= $(DFLAGS)
 
 DEPPATH += --dep-path .
 DEPPATH += --obj-path .
@@ -168,16 +172,29 @@ define ELFCOMPILERUST
 	$(ECHO_END)
 endef
 
+# Remove target suffix here since zig compiler add .o automatically
 define ELFCOMPILEZIG
 	$(ECHO_BEGIN)"ZIG: $1 "
-	# Remove target suffix here since zig compiler add .o automatically
 	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1
+	$(ECHO_END)
+endef
+
+define ELFCOMPILED
+	$(ECHO_BEGIN)"DC: $1 "
+	$(Q) $(DC) -c $(DELFFLAGS) $($(strip $1)_DELFFLAGS) $1 -of $2
 	$(ECHO_END)
 endef
 
 define ELFLD
 	$(ECHO_BEGIN)"LD: $2 "
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDSTARTGROUP) $(LDLIBS) $(LDENDGROUP) -o $2
+	$(ECHO_END)
+endef
+
+# rename "main()" in $1 to "xxx_main()" and save to $2
+define RENAMEMAIN
+	$(ECHO_BEGIN)"Rename main() in $1 and save to $2"
+	$(Q) ${shell cat $1 | sed -e "s/fn[ ]\+main/fn $(addsuffix _main,$(PROGNAME_$@))/" > $2}
 	$(ECHO_END)
 endef
 
@@ -204,6 +221,10 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
+
+$(DOBJS): %$(DEXT)$(SUFFIX)$(OBJEXT): %$(DEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
+		$(call ELFCOMPILED, $<, $@), $(call COMPILED, $<, $@))
 
 AROBJS :=
 ifneq ($(OBJS),)
@@ -235,9 +256,17 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+$(MAINZIGOBJ): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
+
+$(MAINDOBJ): %$(DEXT)$(SUFFIX)$(OBJEXT): %$(DEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILED, $<, $@), $(call COMPILED, $<, $@))
+
+$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ) $(MAINDOBJ)
 	$(Q) mkdir -p $(BINDIR)
-	$(call ELFLD,$(PROGOBJ_$@),$(call CONVERT_PATH,$@))
+	$(call ELFLD, $(PROGOBJ_$@), $(call CONVERT_PATH,$@))
 	$(Q) chmod +x $@
 ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
 	$(Q) $(STRIP) $@
@@ -265,8 +294,14 @@ $(MAINRUSTOBJ): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
 $(MAINZIGOBJ): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
+	$(Q) $(call RENAMEMAIN, $<, $(basename $<)_tmp.zig)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
+			$(call ELFCOMPILEZIG, $(basename $<)_tmp.zig, $@), $(call COMPILEZIG, $(basename $<)_tmp.zig, $@))
+	$(Q) rm -f $(basename $<)_tmp.zig
+
+$(MAINDOBJ): %$(DEXT)$(SUFFIX)$(OBJEXT): %$(DEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILED, $<, $@), $(call COMPILED, $<, $@))
 
 install::
 	@:

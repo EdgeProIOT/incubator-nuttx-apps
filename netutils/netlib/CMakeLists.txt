@@ -62,7 +62,7 @@ if(CONFIG_NETUTILS_NETLIB)
     list(APPEND SRCS netlib_prefix2ipv6netmask.c netlib_ipv6netmask2prefix.c)
     list(APPEND SRCS netlib_ipv6adaptor.c)
     if(CONFIG_NET_ICMPv6_AUTOCONF)
-      list(APPEND SRCS netlib_autoconfig.c)
+      list(APPEND SRCS netlib_autoconfig.c netlib_obtainipv6addr.c)
     endif()
     if(CONFIG_NETDB_DNSCLIENT)
       list(APPEND SRCS netlib_setipv6dnsaddr.c)
@@ -73,6 +73,9 @@ if(CONFIG_NETUTILS_NETLIB)
     if(CONFIG_NETLINK_ROUTE)
       list(APPEND SRCS netlib_getnbtab.c)
     endif()
+    if(CONFIG_NET_IPTABLES)
+      list(APPEND SRCS netlib_ip6tables.c)
+    endif()
   endif()
 
   # Device support
@@ -82,6 +85,12 @@ if(CONFIG_NETUTILS_NETLIB)
     if(CONFIG_NET_ROUTE)
       list(APPEND SRCS netlib_getroute.c)
     endif()
+  endif()
+
+  # Netfilter connection support
+
+  if(CONFIG_NETLINK_NETFILTER)
+    list(APPEND SRCS netlib_conntrack.c)
   endif()
 
   # These require TCP support

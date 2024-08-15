@@ -74,6 +74,9 @@ endif
 ifeq ($(CONFIG_NETLINK_ROUTE),y)
 CSRCS += netlib_getnbtab.c
 endif
+ifeq ($(CONFIG_NET_IPTABLES),y)
+CSRCS += netlib_ip6tables.c
+endif
 endif
 
 # Device support
@@ -83,6 +86,12 @@ CSRCS += netlib_getdevs.c
 ifeq ($(CONFIG_NET_ROUTE),y)
 CSRCS += netlib_getroute.c
 endif
+endif
+
+# Netfilter connection support
+
+ifeq ($(CONFIG_NETLINK_NETFILTER),y)
+CSRCS += netlib_conntrack.c
 endif
 
 # These require TCP support

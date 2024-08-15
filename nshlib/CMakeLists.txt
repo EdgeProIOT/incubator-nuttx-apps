@@ -37,6 +37,7 @@ if(CONFIG_NSH_LIBRARY)
     nsh_mmcmds.c
     nsh_timcmds.c
     nsh_envcmds.c
+    nsh_prompt.c
     nsh_syscmds.c
     nsh_dbgcmds.c)
 
@@ -58,10 +59,6 @@ if(CONFIG_NSH_LIBRARY)
 
   if(CONFIG_NSH_VARS)
     list(APPEND CSRCS nsh_vars.c)
-  endif()
-
-  if(CONFIG_NSH_ROMFSETC)
-    list(APPEND CSRCS nsh_romfsetc.c)
   endif()
 
   if(CONFIG_NET)
